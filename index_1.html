@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QS Ranking Intelligence Dashboard | SCOPE - Parul University</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+/* ===================== CSS VARIABLES & THEME ===================== */
+:root {
+  --bg-primary: #F5F0E8;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #EDE8DD;
+  --text-primary: #1A1A2E;
+  --text-secondary: #4A4A6A;
+  --text-muted: #8A8AA0;
+  --accent-primary: #1B4332;
+  --accent-secondary: #2D6A4F;
+  --accent-gold: #B8860B;
+  --accent-highlight: #D4A843;
+  --accent-red: #C0392B;
+  --border-color: #D4CFC4;
+  --card-bg: rgba(255,255,255,0.75);
+  --card-border: rgba(255,255,255,0.5);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.08);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.12);
+  --glass-blur: blur(20px);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+[data-theme="dark"] {
+  --bg-primary: #0D1117;
+  --bg-secondary: #161B22;
+  --bg-tertiary: #21262D;
+  --text-primary: #E6EDF3;
+  --text-secondary: #8B949E;
+  --text-muted: #6E7681;
+  --accent-primary: #2DD4A8;
+  --accent-secondary: #1F9E7E;
+  --accent-gold: #F0C040;
+  --accent-highlight: #FFD866;
+  --accent-red: #F87171;
+  --border-color: #30363D;
+  --card-bg: rgba(22,27,34,0.8);
+  --card-border: rgba(48,54,61,0.6);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.3);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.4);
+}
+
+/* ===================== BASE STYLES ===================== */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: var(--transition);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+h1,h2,h3,h4,h5,h6 { font-family: var(--font-display); font-weight: 700; }
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-tertiary); }
+::-webkit-scrollbar-thumb { background: var(--accent-primary); border-radius: 4px; }
+::selection { background: var(--accent-primary); color: #fff; }
+
+/* ===================== ANIMATED BACKGROUND ===================== */
+.bg-decor { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.bg-orb {
+  position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.18;
+  animation: orbFloat 25s infinite ease-in-out;
+}
+.bg-orb:nth-child(1) { width: 600px; height: 600px; background: var(--accent-primary); top: -200px; left: -100px; }
+.bg-orb:nth-child(2) { width: 400px; height: 400px; background: var(--accent-gold); bottom: -100px; right: -50px; animation-delay: -8s; }
+.bg-orb:nth-child(3) { width: 300px; height: 300px; background: var(--accent-secondary); top: 50%; left: 50%; animation-delay: -15s; }
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -60px) scale(1.1); }
+  66% { transform: translate(-30px, 40px) scale(0.9); }
+}
+
+/* ===================== GLASS CARD ===================== */
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+}
+.glass-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+
+/* ===================== HEADER ===================== */
+.dashboard-header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--card-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--card-border);
+  padding: 12px 0;
+  transition: var(--transition);
+}
+.brand-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 18px;
+  box-shadow: 0 4px 14px rgba(27,67,50,0.3);
+}
+.brand-title { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0; line-height: 1.2; }
+.brand-sub { font-size: 0.7rem; color: var(--text-muted); margin: 0; letter-spacing: 0.5px; }
+.search-box {
+  position: relative; max-width: 400px; width: 100%;
+}
+.search-box input {
+  width: 100%; padding: 10px 16px 10px 42px; border-radius: 50px;
+  border: 1.5px solid var(--border-color); background: var(--bg-secondary);
+  color: var(--text-primary); font-size: 0.9rem; transition: var(--transition);
+}
+.search-box input:focus {
+  outline: none; border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(27,67,50,0.15);
+}
+.search-box i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+.header-btn {
+  width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--border-color);
+  background: var(--bg-secondary); color: var(--text-primary); display: inline-flex;
+  align-items: center; justify-content: center; cursor: pointer; transition: var(--transition);
+  font-size: 1rem;
+}
+.header-btn:hover { background: var(--accent-primary); color: #fff; border-color: var(--accent-primary); }
+
+/* ===================== CONNECTION PANEL ===================== */
+.connection-panel { margin-top: 16px; }
+.connection-panel .glass-card { padding: 20px 24px; }
+.sheet-input {
+  flex: 1; padding: 10px 16px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color); background: var(--bg-secondary);
+  color: var(--text-primary); font-size: 0.88rem; transition: var(--transition);
+}
+.sheet-input:focus { outline: none; border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(27,67,50,0.12); }
+.btn-connect {
+  padding: 10px 24px; border-radius: var(--radius-sm); border: none;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #fff; font-weight: 600; font-size: 0.88rem; cursor: pointer;
+  transition: var(--transition); white-space: nowrap;
+}
+.btn-connect:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(27,67,50,0.35); }
+.btn-connect:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-sample {
+  padding: 10px 20px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--accent-primary); background: transparent;
+  color: var(--accent-primary); font-weight: 600; font-size: 0.88rem;
+  cursor: pointer; transition: var(--transition); white-space: nowrap;
+}
+.btn-sample:hover { background: var(--accent-primary); color: #fff; }
+
+/* ===================== SUMMARY CARDS ===================== */
+.stat-card {
+  padding: 22px; text-align: center; position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-gold));
+  border-radius: 4px 4px 0 0;
+}
+.stat-icon {
+  width: 48px; height: 48px; border-radius: 14px; margin: 0 auto 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+  background: linear-gradient(135deg, rgba(27,67,50,0.1), rgba(45,106,79,0.08));
+  color: var(--accent-primary); transition: var(--transition);
+}
+[data-theme="dark"] .stat-icon { background: linear-gradient(135deg, rgba(45,212,168,0.15), rgba(31,158,126,0.1)); }
+.stat-value {
+  font-family: var(--font-display); font-size: 2rem; font-weight: 700;
+  color: var(--text-primary); line-height: 1; margin-bottom: 4px;
+}
+.stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
+
+/* ===================== CHART SECTION ===================== */
+.chart-card { padding: 20px; }
+.chart-card h5 { font-family: var(--font-display); font-size: 1.15rem; margin-bottom: 16px; color: var(--text-primary); }
+.chart-container { position: relative; width: 100%; }
+.chart-container canvas { width: 100% !important; }
+
+/* ===================== FILTERS ===================== */
+.filter-section .glass-card { padding: 20px 24px; }
+.filter-select, .filter-input {
+  padding: 9px 14px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color); background: var(--bg-secondary);
+  color: var(--text-primary); font-size: 0.85rem; transition: var(--transition);
+  width: 100%;
+}
+.filter-select:focus, .filter-input:focus { outline: none; border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(27,67,50,0.12); }
+.filter-label { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.btn-reset {
+  padding: 9px 20px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--accent-red); background: transparent;
+  color: var(--accent-red); font-weight: 600; font-size: 0.85rem;
+  cursor: pointer; transition: var(--transition);
+}
+.btn-reset:hover { background: var(--accent-red); color: #fff; }
+.rank-btn {
+  padding: 6px 14px; border-radius: 50px; border: 1.5px solid var(--border-color);
+  background: var(--bg-secondary); color: var(--text-secondary); font-size: 0.8rem;
+  font-weight: 500; cursor: pointer; transition: var(--transition);
+}
+.rank-btn:hover, .rank-btn.active { background: var(--accent-primary); color: #fff; border-color: var(--accent-primary); }
+
+/* ===================== DATA TABLE ===================== */
+.table-section .glass-card { padding: 0; overflow: hidden; }
+.table-top-bar {
+  padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 10px;
+}
+.table-top-bar .results-info { font-size: 0.85rem; color: var(--text-muted); }
+.table-top-bar .results-info strong { color: var(--accent-primary); }
+.table-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.table-action-btn {
+  padding: 7px 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--border-color);
+  background: var(--bg-secondary); color: var(--text-secondary); font-size: 0.8rem;
+  font-weight: 500; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 5px;
+}
+.table-action-btn:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table thead { background: var(--bg-tertiary); }
+.data-table th {
+  padding: 12px 14px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--text-muted); cursor: pointer; user-select: none;
+  border-bottom: 2px solid var(--border-color); white-space: nowrap; transition: var(--transition);
+}
+.data-table th:hover { color: var(--accent-primary); }
+.data-table th .sort-icon { margin-left: 4px; font-size: 0.65rem; }
+.data-table td {
+  padding: 12px 14px; font-size: 0.88rem; border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary); vertical-align: middle;
+}
+.data-table tbody tr { transition: var(--transition); }
+.data-table tbody tr:hover { background: rgba(27,67,50,0.04); }
+[data-theme="dark"] .data-table tbody tr:hover { background: rgba(45,212,168,0.06); }
+.rank-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; padding: 4px 10px; border-radius: 50px; font-weight: 700;
+  font-size: 0.82rem;
+}
+.rank-elite { background: linear-gradient(135deg, #D4A843, #B8860B); color: #fff; }
+.rank-top50 { background: linear-gradient(135deg, #2D6A4F, #1B4332); color: #fff; }
+.rank-top100 { background: linear-gradient(135deg, #3B7A8B, #2A5F6D); color: #fff; }
+.rank-top200 { background: linear-gradient(135deg, #6B7B8D, #5A6A7C); color: #fff; }
+.rank-top500 { background: linear-gradient(135deg, #8B8B8B, #6E6E6E); color: #fff; }
+.rank-other { background: var(--bg-tertiary); color: var(--text-muted); }
+.country-badge, .continent-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 50px;
+  font-size: 0.75rem; font-weight: 600;
+}
+.country-badge { background: rgba(27,67,50,0.1); color: var(--accent-primary); }
+.continent-badge { background: rgba(184,134,11,0.12); color: var(--accent-gold); }
+.score-bar {
+  width: 80px; height: 6px; border-radius: 3px; background: var(--bg-tertiary);
+  overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 8px;
+}
+.score-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent-primary), var(--accent-gold)); transition: width 0.6s ease; }
+.action-icon {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: var(--transition); font-size: 0.9rem;
+}
+.action-icon:hover { background: var(--bg-tertiary); color: var(--accent-primary); }
+.action-icon.bookmarked { color: var(--accent-gold); }
+.action-icon.compared { color: var(--accent-primary); }
+.link-btn {
+  display: inline-block; padding: 5px 14px; border-radius: 50px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #fff; font-size: 0.78rem; font-weight: 600; text-decoration: none;
+  transition: var(--transition); white-space: nowrap; cursor: pointer;
+}
+.link-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(27,67,50,0.35); color: #fff; text-decoration: none; }
+[data-theme="dark"] .link-btn { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); }
+
+/* ===================== PAGINATION ===================== */
+.pagination-bar {
+  padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid var(--border-color); flex-wrap: wrap; gap: 10px;
+}
+.page-btn {
+  width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1.5px solid var(--border-color);
+  background: var(--bg-secondary); color: var(--text-secondary); font-size: 0.85rem;
+  font-weight: 500; cursor: pointer; transition: var(--transition);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.page-btn:hover, .page-btn.active { background: var(--accent-primary); color: #fff; border-color: var(--accent-primary); }
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.page-size-select {
+  padding: 6px 10px; border-radius: var(--radius-sm); border: 1.5px solid var(--border-color);
+  background: var(--bg-secondary); color: var(--text-primary); font-size: 0.82rem;
+}
+
+/* ===================== EMPTY STATE ===================== */
+.empty-state {
+  padding: 60px 20px; text-align: center;
+}
+.empty-state i { font-size: 3rem; color: var(--text-muted); margin-bottom: 16px; }
+.empty-state h4 { color: var(--text-secondary); margin-bottom: 8px; }
+.empty-state p { color: var(--text-muted); font-size: 0.9rem; }
+
+/* ===================== COMPARISON BAR ===================== */
+.compare-bar {
+  position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%);
+  z-index: 200; background: var(--card-bg); backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  padding: 14px 24px; display: flex; align-items: center; gap: 14px;
+  transition: bottom 0.4s cubic-bezier(0.4,0,0.2,1);
+  max-width: 90vw;
+}
+.compare-bar.visible { bottom: 24px; }
+.compare-bar .compare-items { display: flex; gap: 8px; flex-wrap: wrap; }
+.compare-chip {
+  padding: 5px 12px; border-radius: 50px; background: rgba(27,67,50,0.1);
+  color: var(--accent-primary); font-size: 0.8rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.compare-chip .remove-chip { cursor: pointer; opacity: 0.7; }
+.compare-chip .remove-chip:hover { opacity: 1; }
+.btn-compare-go {
+  padding: 8px 20px; border-radius: var(--radius-sm); border: none;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer;
+  transition: var(--transition); white-space: nowrap;
+}
+.btn-compare-go:hover { box-shadow: 0 4px 14px rgba(27,67,50,0.35); }
+
+/* ===================== MODAL ===================== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center;
+  padding: 20px; opacity: 0; transition: opacity 0.3s ease;
+}
+.modal-overlay.show { display: flex; opacity: 1; }
+.modal-content {
+  background: var(--bg-secondary); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); max-width: 900px; width: 100%;
+  max-height: 85vh; overflow-y: auto; transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+.modal-overlay.show .modal-content { transform: translateY(0); }
+.modal-header-custom {
+  padding: 20px 24px; border-bottom: 1px solid var(--border-color);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header-custom h4 { margin: 0; font-family: var(--font-display); }
+.modal-close {
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  background: var(--bg-tertiary); color: var(--text-secondary);
+  cursor: pointer; font-size: 1.1rem; display: flex; align-items: center;
+  justify-content: center; transition: var(--transition);
+}
+.modal-close:hover { background: var(--accent-red); color: #fff; }
+.modal-body-custom { padding: 24px; }
+.compare-table { width: 100%; border-collapse: collapse; }
+.compare-table th, .compare-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-color); font-size: 0.88rem; text-align: center; }
+.compare-table th { background: var(--bg-tertiary); font-weight: 600; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.compare-table td:first-child { text-align: left; font-weight: 600; color: var(--text-secondary); }
+.compare-highlight { color: var(--accent-primary); font-weight: 700; }
+
+/* ===================== BOOKMARKS SECTION ===================== */
+.bookmark-section { display: none; }
+.bookmark-section.has-items { display: block; }
+.bookmark-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 50px; margin: 4px;
+  background: rgba(184,134,11,0.1); border: 1px solid rgba(184,134,11,0.2);
+  font-size: 0.82rem; font-weight: 500; color: var(--accent-gold);
+  transition: var(--transition);
+}
+.bookmark-chip:hover { background: rgba(184,134,11,0.2); }
+.bookmark-chip .remove-bm { cursor: pointer; opacity: 0.7; font-size: 0.75rem; }
+.bookmark-chip .remove-bm:hover { opacity: 1; }
+
+/* ===================== TOAST NOTIFICATIONS ===================== */
+.toast-container { position: fixed; top: 80px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+.toast-msg {
+  padding: 12px 20px; border-radius: var(--radius-sm);
+  background: var(--bg-secondary); border-left: 4px solid var(--accent-primary);
+  box-shadow: var(--shadow-md); font-size: 0.88rem; color: var(--text-primary);
+  animation: toastIn 0.3s ease forwards; max-width: 320px;
+}
+.toast-msg.toast-success { border-left-color: #27AE60; }
+.toast-msg.toast-error { border-left-color: var(--accent-red); }
+.toast-msg.toast-warning { border-left-color: var(--accent-gold); }
+.toast-msg.toast-info { border-left-color: var(--accent-primary); }
+@keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+
+/* ===================== LOADING SPINNER ===================== */
+.spinner-overlay {
+  position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center;
+}
+.spinner-overlay.show { display: flex; }
+.spinner-box {
+  background: var(--bg-secondary); border-radius: var(--radius-lg); padding: 40px;
+  text-align: center; box-shadow: var(--shadow-lg);
+}
+.spinner-ring {
+  width: 48px; height: 48px; border: 4px solid var(--border-color);
+  border-top-color: var(--accent-primary); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===================== TOOLTIP ===================== */
+.tip { position: relative; cursor: help; }
+.tip::after {
+  content: attr(data-tip); position: absolute; bottom: 100%; left: 50%;
+  transform: translateX(-50%) translateY(-4px); padding: 6px 12px;
+  border-radius: 6px; background: var(--text-primary); color: var(--bg-primary);
+  font-size: 0.75rem; font-weight: 500; white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity 0.2s ease; z-index: 10;
+}
+.tip:hover::after { opacity: 1; }
+
+/* ===================== SECTION REVEAL ===================== */
+.reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ===================== FOOTER ===================== */
+.dashboard-footer {
+  padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.82rem;
+  border-top: 1px solid var(--border-color); margin-top: 40px;
+}
+.dashboard-footer a { color: var(--accent-primary); text-decoration: none; }
+
+/* ===================== LAST UPDATED ===================== */
+.last-updated {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 50px; background: rgba(27,67,50,0.08);
+  font-size: 0.75rem; color: var(--text-muted); font-weight: 500;
+}
+.last-updated i { color: var(--accent-primary); font-size: 0.7rem; }
+
+/* ===================== PRINT STYLES ===================== */
+@media print {
+  .dashboard-header, .connection-panel, .filter-section, .compare-bar,
+  .toast-container, .bg-decor, .table-actions, .action-icon, .pagination-bar,
+  .header-btn, .btn-connect, .btn-sample, .btn-reset, .rank-btn { display: none !important; }
+  .glass-card { box-shadow: none !important; border: 1px solid #ddd !important; background: #fff !important; }
+  body { background: #fff !important; color: #000 !important; }
+  .data-table th, .data-table td { border: 1px solid #ddd !important; color: #000 !important; }
+}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 991px) {
+  .stat-value { font-size: 1.6rem; }
+  .chart-card { margin-bottom: 16px; }
+}
+@media (max-width: 767px) {
+  .brand-title { font-size: 0.95rem; }
+  .search-box { max-width: 100%; margin-top: 8px; }
+  .stat-card { padding: 16px; }
+  .stat-value { font-size: 1.4rem; }
+  .data-table th, .data-table td { padding: 8px 10px; font-size: 0.8rem; }
+  .table-responsive-stack { display: block; }
+  .compare-bar { padding: 10px 16px; }
+  .modal-content { max-height: 90vh; }
+}
+@media (max-width: 575px) {
+  .filter-section .row > div { margin-bottom: 8px; }
+  .pagination-bar { flex-direction: column; text-align: center; }
+}
+
+/* ===================== ANIMATIONS ===================== */
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+.anim-delay-1 { animation-delay: 0.1s; }
+.anim-delay-2 { animation-delay: 0.2s; }
+.anim-delay-3 { animation-delay: 0.3s; }
+.anim-delay-4 { animation-delay: 0.4s; }
+.anim-delay-5 { animation-delay: 0.5s; }
+.anim-fade-in { animation: fadeInUp 0.6s ease both; }
+</style>
+</head>
+<body>
+
+<!-- Background decoration -->
+<div class="bg-decor">
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+</div>
+
+<!-- Loading spinner -->
+<div class="spinner-overlay" id="loadingSpinner">
+  <div class="spinner-box">
+    <div class="spinner-ring"></div>
+    <div style="font-weight:600;color:var(--text-primary)">Loading Data...</div>
+    <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px">Fetching from source</div>
+  </div>
+</div>
+
+<!-- Toast notification container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ==================== HEADER ==================== -->
+<header class="dashboard-header">
+  <div class="container-fluid px-3 px-md-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-3">
+        <div class="brand-mark">QS</div>
+        <div>
+          <h1 class="brand-title">QS Ranking Intelligence Dashboard</h1>
+          <p class="brand-sub">Proudly Powered by SCOPE - Parul University</p>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <div class="search-box order-3 order-md-1">
+          <i class="fas fa-search"></i>
+          <input type="text" id="globalSearch" placeholder="Search university, country, continent..." aria-label="Global search">
+        </div>
+        <button class="header-btn order-1 order-md-2" id="btnDarkMode" title="Toggle dark mode" aria-label="Toggle dark mode">
+          <i class="fas fa-moon"></i>
+        </button>
+        <button class="header-btn order-2 order-md-3" id="btnBookmarks" title="View bookmarks" aria-label="View bookmarks">
+          <i class="fas fa-bookmark"></i>
+        </button>
+        <div class="last-updated order-4 order-md-4" id="lastUpdated">
+          <i class="fas fa-clock"></i> <span>--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container-fluid px-3 px-md-4" style="position:relative;z-index:1;">
+
+  <!-- ==================== CONNECTION PANEL ==================== -->
+  <section class="connection-panel reveal" id="connectionPanel">
+    <div class="glass-card">
+      <div class="d-flex align-items-center gap-2 mb-2" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#connectionBody">
+        <i class="fas fa-link" style="color:var(--accent-primary)"></i>
+        <h5 style="margin:0;font-size:1rem;font-family:var(--font-body);font-weight:600">Google Sheets Connection</h5>
+        <i class="fas fa-chevron-down ms-auto" style="font-size:0.75rem;color:var(--text-muted);transition:var(--transition)"></i>
+      </div>
+      <div class="collapse show" id="connectionBody">
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">
+          Share your Google Sheet (<b>Share &rarr; Anyone with the link &rarr; Viewer</b>) and paste the link below. It should look like:<br><code style="font-size:0.78rem;word-break:break-all">https://docs.google.com/spreadsheets/d/1aBc.../edit?usp=sharing</code><br>
+          <span style="font-size:0.75rem">Expected columns: Rank, University, Country, Continent, Overall Score, Academic Rep, Employer Rep, Faculty Student, Citations/Faculty, Intl Faculty, Intl Students, Year, <b>Link</b></span>
+        </p>
+        <div class="d-flex gap-2 flex-wrap">
+          <input type="text" class="sheet-input" id="sheetUrl" value="https://docs.google.com/spreadsheets/d/1atX6N4tG_bKBhhQMbeBaFstua2pphJLvefUtyeFmBEQ/edit?usp=sharing" placeholder="Paste your Google Sheets link here...">
+          <button class="btn-connect" id="btnConnect" onclick="connectSheet()">
+            <i class="fas fa-plug me-1"></i> Connect
+          </button>
+          <button class="btn-sample" onclick="loadSampleData()">
+            <i class="fas fa-database me-1"></i> Load Sample Data
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SUMMARY CARDS ==================== -->
+  <section class="row g-3 mt-1 reveal" id="summarySection">
+    <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
+      <div class="glass-card stat-card anim-fade-in anim-delay-1">
+        <div class="stat-icon"><i class="fas fa-university"></i></div>
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">Universities</div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
+      <div class="glass-card stat-card anim-fade-in anim-delay-2">
+        <div class="stat-icon"><i class="fas fa-globe-americas"></i></div>
+        <div class="stat-value" id="statCountries">0</div>
+        <div class="stat-label">Countries</div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
+      <div class="glass-card stat-card anim-fade-in anim-delay-3">
+        <div class="stat-icon"><i class="fas fa-map"></i></div>
+        <div class="stat-value" id="statContinents">0</div>
+        <div class="stat-label">Continents</div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
+      <div class="glass-card stat-card anim-fade-in anim-delay-4">
+        <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+        <div class="stat-value" id="statTopRanked" style="font-size:1rem;line-height:1.3">--</div>
+        <div class="stat-label">Top Ranked</div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
+      <div class="glass-card stat-card anim-fade-in anim-delay-5">
+        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="stat-value" id="statAvgScore">0</div>
+        <div class="stat-label">Avg Score</div>
+      </div>
+    </div>
+    <div class="col-xl-2 col-lg-4 col-md-4 col-sm-6">
+      <div class="glass-card stat-card anim-fade-in anim-delay-5">
+        <div class="stat-icon"><i class="fas fa-flag"></i></div>
+        <div class="stat-value" id="statTopCountry" style="font-size:1rem;line-height:1.3">--</div>
+        <div class="stat-label tip" data-tip="Country with most ranked universities">Top Country</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CHARTS ==================== -->
+  <section class="row g-3 mt-1 reveal" id="chartsSection">
+    <div class="col-lg-6 col-md-12">
+      <div class="glass-card chart-card" style="min-height:340px">
+        <h5><i class="fas fa-medal me-2" style="color:var(--accent-gold)"></i>Top 10 Universities by Score</h5>
+        <div class="chart-container"><canvas id="chartTop10"></canvas></div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="glass-card chart-card" style="min-height:340px">
+        <h5><i class="fas fa-globe me-2" style="color:var(--accent-primary)"></i>By Country</h5>
+        <div class="chart-container"><canvas id="chartCountry"></canvas></div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="glass-card chart-card" style="min-height:340px">
+        <h5><i class="fas fa-earth-americas me-2" style="color:var(--accent-secondary)"></i>By Continent</h5>
+        <div class="chart-container"><canvas id="chartContinent"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FILTERS ==================== -->
+  <section class="filter-section mt-3 reveal" id="filterSection">
+    <div class="glass-card">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="fas fa-filter" style="color:var(--accent-primary)"></i>
+        <h5 style="margin:0;font-size:1rem;font-family:var(--font-body);font-weight:600">Advanced Filters</h5>
+        <button class="btn-reset ms-auto" onclick="resetFilters()">
+          <i class="fas fa-rotate-left me-1"></i> Reset
+        </button>
+      </div>
+      <div class="row g-2">
+        <div class="col-lg-2 col-md-4 col-sm-6">
+          <div class="filter-label">Country</div>
+          <select class="filter-select" id="filterCountry" onchange="applyFilters()"><option value="">All Countries</option></select>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6">
+          <div class="filter-label">Continent</div>
+          <select class="filter-select" id="filterContinent" onchange="applyFilters()"><option value="">All Continents</option></select>
+        </div>
+        <div class="col-lg-2 col-md-4 col-sm-6">
+          <div class="filter-label">Year</div>
+          <select class="filter-select" id="filterYear" onchange="applyFilters()"><option value="">All Years</option></select>
+        </div>
+        <div class="col-lg-3 col-md-8 col-sm-12">
+          <div class="filter-label">Ranking Range</div>
+          <div class="d-flex gap-1 flex-wrap">
+            <button class="rank-btn active" data-range="all" onclick="setRankRange(this)">All</button>
+            <button class="rank-btn" data-range="10" onclick="setRankRange(this)">Top 10</button>
+            <button class="rank-btn" data-range="50" onclick="setRankRange(this)">Top 50</button>
+            <button class="rank-btn" data-range="100" onclick="setRankRange(this)">Top 100</button>
+            <button class="rank-btn" data-range="500" onclick="setRankRange(this)">Top 500</button>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-4 col-sm-6">
+          <div class="filter-label">Min Score</div>
+          <input type="number" class="filter-input" id="filterMinScore" placeholder="e.g. 70" min="0" max="100" oninput="applyFilters()">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== BOOKMARKS ==================== -->
+  <section class="bookmark-section mt-3 reveal" id="bookmarkSection">
+    <div class="glass-card" style="padding:16px 20px">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <i class="fas fa-bookmark" style="color:var(--accent-gold)"></i>
+        <h5 style="margin:0;font-size:0.95rem;font-family:var(--font-body);font-weight:600">Bookmarked Universities</h5>
+        <button class="btn-reset ms-auto" style="font-size:0.78rem;padding:5px 12px" onclick="clearBookmarks()">Clear All</button>
+      </div>
+      <div id="bookmarkList"></div>
+    </div>
+  </section>
+
+  <!-- ==================== DATA TABLE ==================== -->
+  <section class="table-section mt-3 reveal" id="tableSection">
+    <div class="glass-card">
+      <div class="table-top-bar">
+        <div class="results-info">
+          Showing <strong id="showingFrom">0</strong>-<strong id="showingTo">0</strong> of <strong id="totalResults">0</strong> universities
+        </div>
+        <div class="table-actions">
+          <button class="table-action-btn" onclick="exportCSV()" title="Export as CSV"><i class="fas fa-file-csv"></i> CSV</button>
+          <button class="table-action-btn" onclick="window.print()" title="Print report"><i class="fas fa-print"></i> Print</button>
+          <select class="page-size-select" id="pageSizeSelect" onchange="changePageSize()">
+            <option value="10">10 / page</option>
+            <option value="25">25 / page</option>
+            <option value="50">50 / page</option>
+            <option value="100">100 / page</option>
+          </select>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="data-table" id="dataTable">
+          <thead>
+            <tr>
+              <th onclick="sortBy('rank')">Rank <i class="fas fa-sort sort-icon"></i></th>
+              <th onclick="sortBy('university')">University <i class="fas fa-sort sort-icon"></i></th>
+              <th onclick="sortBy('country')">Country <i class="fas fa-sort sort-icon"></i></th>
+              <th onclick="sortBy('continent')">Continent <i class="fas fa-sort sort-icon"></i></th>
+              <th onclick="sortBy('overallScore')">Score <i class="fas fa-sort sort-icon"></i></th>
+              <th onclick="sortBy('academicReputation')">Acad. Rep. <i class="fas fa-sort sort-icon"></i></th>
+              <th onclick="sortBy('employerReputation')">Emp. Rep. <i class="fas fa-sort sort-icon"></i></th>
+              <th>Link</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="empty-state" style="display:none">
+        <i class="fas fa-search"></i>
+        <h4>No Results Found</h4>
+        <p>Try adjusting your search or filter criteria.</p>
+      </div>
+      <div class="pagination-bar" id="paginationBar">
+        <div class="d-flex align-items-center gap-1">
+          <button class="page-btn" id="btnPrev" onclick="changePage(-1)"><i class="fas fa-chevron-left"></i></button>
+          <div id="pageNumbers" class="d-flex gap-1"></div>
+          <button class="page-btn" id="btnNext" onclick="changePage(1)"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div style="font-size:0.82rem;color:var(--text-muted)" id="pageInfo"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==================== COMPARISON BAR ==================== -->
+<div class="compare-bar" id="compareBar">
+  <div class="d-flex align-items-center gap-2 flex-wrap">
+    <i class="fas fa-code-compare" style="color:var(--accent-primary)"></i>
+    <span style="font-size:0.82rem;font-weight:600;color:var(--text-secondary)">Compare:</span>
+    <div class="compare-items" id="compareItems"></div>
+    <button class="btn-compare-go" onclick="openCompareModal()">Compare Now</button>
+    <button class="action-icon" onclick="clearCompare()" title="Clear comparison"><i class="fas fa-times"></i></button>
+  </div>
+</div>
+
+<!-- ==================== COMPARISON MODAL ==================== -->
+<div class="modal-overlay" id="compareModal">
+  <div class="modal-content">
+    <div class="modal-header-custom">
+      <h4><i class="fas fa-code-compare me-2" style="color:var(--accent-primary)"></i>University Comparison</h4>
+      <button class="modal-close" onclick="closeCompareModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body-custom">
+      <div class="chart-container" style="max-width:500px;margin:0 auto 24px">
+        <canvas id="chartCompare"></canvas>
+      </div>
+      <div style="overflow-x:auto" id="compareTableWrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="dashboard-footer">
+  <p>QS Ranking Intelligence Dashboard &mdash; Proudly Powered by <a href="#">SCOPE</a>, Parul University</p>
+  <p style="margin:0;font-size:0.75rem">A dynamic analytics platform for exploring university rankings by country, continent, and global performance.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ================================================================
+   QS RANKING INTELLIGENCE DASHBOARD - MAIN APPLICATION SCRIPT
+   ================================================================ */
+
+// ===================== CONFIGURATION =====================
+const CONFIG = {
+  defaultPageSize: 10,
+  maxCompare: 4,
+  chartColors: [
+    '#1B4332','#2D6A4F','#40916C','#52B788','#74C69D',
+    '#B8860B','#D4A843','#C0392B','#3B7A8B','#6B7B8D',
+    '#8B6914','#5A6A7C','#3E8948','#A0522D','#4682B4'
+  ],
+  continentColors: {
+    'Asia': '#2D6A4F','Europe': '#3B7A8B','North America': '#B8860B',
+    'Oceania': '#40916C','South America': '#C0392B','Africa': '#8B6914'
+  }
+};
+
+// ===================== SAMPLE DATA =====================
+const SAMPLE_DATA = [
+  {rank:1,university:"Massachusetts Institute of Technology (MIT)",country:"United States",continent:"North America",overallScore:100,academicReputation:100,employerReputation:100,facultyStudent:99.5,citationsPerFaculty:99.2,internationalFaculty:97.8,internationalStudents:96.5,year:2025,link:"https://www.mit.edu"},
+  {rank:2,university:"Imperial College London",country:"United Kingdom",continent:"Europe",overallScore:98.5,academicReputation:98.8,employerReputation:99.2,facultyStudent:97.6,citationsPerFaculty:98.1,internationalFaculty:99.1,internationalStudents:98.3,year:2025,link:"https://www.imperial.ac.uk"},
+  {rank:3,university:"University of Oxford",country:"United Kingdom",continent:"Europe",overallScore:98.4,academicReputation:99.5,employerReputation:98.7,facultyStudent:97.2,citationsPerFaculty:97.8,internationalFaculty:96.5,internationalStudents:95.8,year:2025,link:"https://www.ox.ac.uk"},
+  {rank:4,university:"Harvard University",country:"United States",continent:"North America",overallScore:98.3,academicReputation:99.8,employerReputation:99.1,facultyStudent:96.8,citationsPerFaculty:99.5,internationalFaculty:88.5,internationalStudents:87.2,year:2025,link:"https://www.harvard.edu"},
+  {rank:5,university:"University of Cambridge",country:"United Kingdom",continent:"Europe",overallScore:97.9,academicReputation:99.2,employerReputation:98.5,facultyStudent:96.5,citationsPerFaculty:97.2,internationalFaculty:95.8,internationalStudents:94.6,year:2025,link:"https://www.cam.ac.uk"},
+  {rank:6,university:"Stanford University",country:"United States",continent:"North America",overallScore:97.8,academicReputation:99.1,employerReputation:98.8,facultyStudent:97.1,citationsPerFaculty:98.8,internationalFaculty:89.2,internationalStudents:88.1,year:2025,link:"https://www.stanford.edu"},
+  {rank:7,university:"ETH Zurich",country:"Switzerland",continent:"Europe",overallScore:97.2,academicReputation:98.5,employerReputation:97.8,facultyStudent:95.9,citationsPerFaculty:97.5,internationalFaculty:98.2,internationalStudents:95.1,year:2025,link:"https://ethz.ch"},
+  {rank:8,university:"National University of Singapore (NUS)",country:"Singapore",continent:"Asia",overallScore:96.8,academicReputation:97.2,employerReputation:98.1,facultyStudent:95.2,citationsPerFaculty:94.8,internationalFaculty:99.5,internationalStudents:97.2,year:2025,link:"https://www.nus.edu.sg"},
+  {rank:9,university:"UCL",country:"United Kingdom",continent:"Europe",overallScore:96.5,academicReputation:98.1,employerReputation:96.8,facultyStudent:94.5,citationsPerFaculty:95.2,internationalFaculty:97.5,internationalStudents:96.8,year:2025,link:"https://www.ucl.ac.uk"},
+  {rank:10,university:"California Institute of Technology (Caltech)",country:"United States",continent:"North America",overallScore:96.2,academicReputation:97.8,employerReputation:95.5,facultyStudent:98.2,citationsPerFaculty:99.1,internationalFaculty:85.6,internationalStudents:84.2,year:2025,link:"https://www.caltech.edu"},
+  {rank:11,university:"University of Pennsylvania",country:"United States",continent:"North America",overallScore:95.8,academicReputation:96.5,employerReputation:97.2,facultyStudent:94.1,citationsPerFaculty:93.8,internationalFaculty:86.2,internationalStudents:85.5,year:2025},
+  {rank:12,university:"University of California, Berkeley",country:"United States",continent:"North America",overallScore:95.5,academicReputation:98.2,employerReputation:95.8,facultyStudent:92.5,citationsPerFaculty:97.5,internationalFaculty:82.1,internationalStudents:81.8,year:2025},
+  {rank:13,university:"University of Melbourne",country:"Australia",continent:"Oceania",overallScore:95.1,academicReputation:96.8,employerReputation:96.2,facultyStudent:93.2,citationsPerFaculty:91.5,internationalFaculty:95.2,internationalStudents:94.8,year:2025},
+  {rank:14,university:"University of Chicago",country:"United States",continent:"North America",overallScore:94.8,academicReputation:97.5,employerReputation:94.8,facultyStudent:95.5,citationsPerFaculty:95.2,internationalFaculty:82.8,internationalStudents:81.2,year:2025},
+  {rank:15,university:"Peking University",country:"China",continent:"Asia",overallScore:94.5,academicReputation:96.2,employerReputation:95.5,facultyStudent:91.8,citationsPerFaculty:90.2,internationalFaculty:78.5,internationalStudents:75.2,year:2025},
+  {rank:16,university:"Tsinghua University",country:"China",continent:"Asia",overallScore:94.2,academicReputation:95.8,employerReputation:96.5,facultyStudent:90.5,citationsPerFaculty:89.8,internationalFaculty:72.2,internationalStudents:68.5,year:2025},
+  {rank:17,university:"Cornell University",country:"United States",continent:"North America",overallScore:93.8,academicReputation:95.2,employerReputation:94.1,facultyStudent:93.8,citationsPerFaculty:92.5,internationalFaculty:84.5,internationalStudents:83.2,year:2025},
+  {rank:18,university:"Nanyang Technological University (NTU)",country:"Singapore",continent:"Asia",overallScore:93.5,academicReputation:94.5,employerReputation:95.8,facultyStudent:92.2,citationsPerFaculty:91.8,internationalFaculty:98.8,internationalStudents:96.5,year:2025},
+  {rank:19,university:"University of New South Wales",country:"Australia",continent:"Oceania",overallScore:93.2,academicReputation:94.1,employerReputation:95.2,facultyStudent:91.5,citationsPerFaculty:89.8,internationalFaculty:94.5,internationalStudents:93.8,year:2025},
+  {rank:20,university:"University of Sydney",country:"Australia",continent:"Oceania",overallScore:92.8,academicReputation:94.8,employerReputation:94.5,facultyStudent:90.8,citationsPerFaculty:88.5,internationalFaculty:95.1,internationalStudents:94.2,year:2025},
+  {rank:21,university:"University of Toronto",country:"Canada",continent:"North America",overallScore:92.5,academicReputation:95.5,employerReputation:93.2,facultyStudent:89.5,citationsPerFaculty:91.2,internationalFaculty:92.8,internationalStudents:91.5,year:2025},
+  {rank:22,university:"The University of Edinburgh",country:"United Kingdom",continent:"Europe",overallScore:92.1,academicReputation:95.2,employerReputation:92.8,facultyStudent:88.2,citationsPerFaculty:89.5,internationalFaculty:94.2,internationalStudents:93.5,year:2025},
+  {rank:23,university:"Yale University",country:"United States",continent:"North America",overallScore:91.8,academicReputation:96.8,employerReputation:93.5,facultyStudent:94.2,citationsPerFaculty:90.8,internationalFaculty:80.5,internationalStudents:79.2,year:2025},
+  {rank:24,university:"The University of Hong Kong",country:"Hong Kong SAR",continent:"Asia",overallScore:91.5,academicReputation:93.8,employerReputation:94.2,facultyStudent:89.8,citationsPerFaculty:87.5,internationalFaculty:96.8,internationalStudents:95.2,year:2025},
+  {rank:25,university:"Tokyo Institute of Technology",country:"Japan",continent:"Asia",overallScore:91.2,academicReputation:93.5,employerReputation:92.8,facultyStudent:90.2,citationsPerFaculty:88.2,internationalFaculty:82.5,internationalStudents:78.8,year:2025},
+  {rank:26,university:"Johns Hopkins University",country:"United States",continent:"North America",overallScore:90.8,academicReputation:95.1,employerReputation:91.5,facultyStudent:92.8,citationsPerFaculty:93.5,internationalFaculty:78.2,internationalStudents:77.5,year:2025},
+  {rank:27,university:"Columbia University",country:"United States",continent:"North America",overallScore:90.5,academicReputation:96.2,employerReputation:93.8,facultyStudent:88.5,citationsPerFaculty:91.8,internationalFaculty:82.8,internationalStudents:81.5,year:2025},
+  {rank:28,university:"University of California, Los Angeles (UCLA)",country:"United States",continent:"North America",overallScore:90.2,academicReputation:96.5,employerReputation:92.5,facultyStudent:87.8,citationsPerFaculty:92.5,internationalFaculty:80.2,internationalStudents:79.8,year:2025},
+  {rank:29,university:"McGill University",country:"Canada",continent:"North America",overallScore:89.8,academicReputation:93.2,employerReputation:91.8,facultyStudent:87.2,citationsPerFaculty:86.5,internationalFaculty:91.5,internationalStudents:90.2,year:2025},
+  {rank:30,university:"The University of Tokyo",country:"Japan",continent:"Asia",overallScore:89.5,academicReputation:95.5,employerReputation:94.2,facultyStudent:88.5,citationsPerFaculty:84.2,internationalFaculty:68.5,internationalStudents:65.2,year:2025},
+  {rank:31,university:"Duke University",country:"United States",continent:"North America",overallScore:89.2,academicReputation:94.5,employerReputation:92.8,facultyStudent:91.5,citationsPerFaculty:89.8,internationalFaculty:78.8,internationalStudents:77.2,year:2025},
+  {rank:32,university:"The University of Manchester",country:"United Kingdom",continent:"Europe",overallScore:88.8,academicReputation:93.8,employerReputation:91.5,facultyStudent:85.2,citationsPerFaculty:88.5,internationalFaculty:92.5,internationalStudents:91.8,year:2025},
+  {rank:33,university:"King's College London",country:"United Kingdom",continent:"Europe",overallScore:88.5,academicReputation:93.5,employerReputation:90.2,facultyStudent:84.8,citationsPerFaculty:87.2,internationalFaculty:93.8,internationalStudents:92.5,year:2025},
+  {rank:34,university:"Seoul National University",country:"South Korea",continent:"Asia",overallScore:88.2,academicReputation:92.8,employerReputation:93.5,facultyStudent:86.5,citationsPerFaculty:82.8,internationalFaculty:75.2,internationalStudents:72.5,year:2025},
+  {rank:35,university:"University of British Columbia",country:"Canada",continent:"North America",overallScore:87.8,academicReputation:92.5,employerReputation:90.8,facultyStudent:85.8,citationsPerFaculty:86.2,internationalFaculty:89.5,internationalStudents:88.2,year:2025},
+  {rank:36,university:"The Hong Kong University of Science and Technology",country:"Hong Kong SAR",continent:"Asia",overallScore:87.5,academicReputation:91.2,employerReputation:93.8,facultyStudent:88.2,citationsPerFaculty:85.5,internationalFaculty:95.2,internationalStudents:94.8,year:2025},
+  {rank:37,university:"University of Michigan-Ann Arbor",country:"United States",continent:"North America",overallScore:87.2,academicReputation:93.8,employerReputation:90.5,facultyStudent:86.2,citationsPerFaculty:88.8,internationalFaculty:76.8,internationalStudents:75.5,year:2025},
+  {rank:38,university:"LMU Munich",country:"Germany",continent:"Europe",overallScore:86.8,academicReputation:92.2,employerReputation:88.5,facultyStudent:84.5,citationsPerFaculty:85.2,internationalFaculty:88.2,internationalStudents:87.5,year:2025},
+  {rank:39,university:"The University of Queensland",country:"Australia",continent:"Oceania",overallScore:86.5,academicReputation:91.8,employerReputation:89.2,facultyStudent:84.8,citationsPerFaculty:83.5,internationalFaculty:92.8,internationalStudents:91.2,year:2025},
+  {rank:40,university:"Paris Sciences et Lettres (PSL) University",country:"France",continent:"Europe",overallScore:86.2,academicReputation:92.5,employerReputation:88.8,facultyStudent:85.2,citationsPerFaculty:84.8,internationalFaculty:90.5,internationalStudents:89.2,year:2025},
+  {rank:41,university:"KAIST - Korea Advanced Institute of Science and Technology",country:"South Korea",continent:"Asia",overallScore:85.8,academicReputation:89.5,employerReputation:91.2,facultyStudent:87.5,citationsPerFaculty:84.2,internationalFaculty:82.8,internationalStudents:80.5,year:2025},
+  {rank:42,university:"University of Zurich",country:"Switzerland",continent:"Europe",overallScore:85.5,academicReputation:91.2,employerReputation:87.5,facultyStudent:83.8,citationsPerFaculty:86.5,internationalFaculty:91.2,internationalStudents:90.8,year:2025},
+  {rank:43,university:"Monash University",country:"Australia",continent:"Oceania",overallScore:85.2,academicReputation:90.5,employerReputation:89.8,facultyStudent:82.5,citationsPerFaculty:81.8,internationalFaculty:93.5,internationalStudents:92.8,year:2025},
+  {rank:44,university:"Delft University of Technology",country:"Netherlands",continent:"Europe",overallScore:84.8,academicReputation:90.2,employerReputation:91.5,facultyStudent:85.8,citationsPerFaculty:83.2,internationalFaculty:90.8,internationalStudents:89.5,year:2025},
+  {rank:45,university:"The University of Warwick",country:"United Kingdom",continent:"Europe",overallScore:84.5,academicReputation:90.8,employerReputation:89.2,facultyStudent:83.2,citationsPerFaculty:82.8,internationalFaculty:91.5,internationalStudents:90.2,year:2025},
+  {rank:46,university:"Fudan University",country:"China",continent:"Asia",overallScore:84.2,academicReputation:89.8,employerReputation:90.5,facultyStudent:82.8,citationsPerFaculty:80.5,internationalFaculty:68.2,internationalStudents:65.8,year:2025},
+  {rank:47,university:"University of Copenhagen",country:"Denmark",continent:"Europe",overallScore:83.8,academicReputation:91.5,employerReputation:85.2,facultyStudent:82.5,citationsPerFaculty:85.8,internationalFaculty:88.5,internationalStudents:87.2,year:2025},
+  {rank:48,university:"University of Amsterdam",country:"Netherlands",continent:"Europe",overallScore:83.5,academicReputation:90.5,employerReputation:86.8,facultyStudent:81.2,citationsPerFaculty:82.5,internationalFaculty:89.8,internationalStudents:88.5,year:2025},
+  {rank:49,university:"Shanghai Jiao Tong University",country:"China",continent:"Asia",overallScore:83.2,academicReputation:88.5,employerReputation:89.8,facultyStudent:81.5,citationsPerFaculty:79.8,internationalFaculty:65.5,internationalStudents:62.2,year:2025},
+  {rank:50,university:"Indian Institute of Technology Bombay",country:"India",continent:"Asia",overallScore:82.8,academicReputation:87.2,employerReputation:91.5,facultyStudent:85.2,citationsPerFaculty:75.8,internationalFaculty:62.8,internationalStudents:58.5,year:2025},
+  {rank:51,university:"University of California, San Diego (UCSD)",country:"United States",continent:"North America",overallScore:82.5,academicReputation:91.8,employerReputation:85.5,facultyStudent:80.8,citationsPerFaculty:87.2,internationalFaculty:75.2,internationalStudents:74.5,year:2025},
+  {rank:55,university:"University of Bristol",country:"United Kingdom",continent:"Europe",overallScore:81.5,academicReputation:89.2,employerReputation:85.8,facultyStudent:79.5,citationsPerFaculty:80.2,internationalFaculty:88.5,internationalStudents:87.2,year:2025},
+  {rank:60,university:"University of Glasgow",country:"United Kingdom",continent:"Europe",overallScore:80.2,academicReputation:87.8,employerReputation:83.5,facultyStudent:78.2,citationsPerFaculty:78.8,internationalFaculty:87.2,internationalStudents:85.8,year:2025},
+  {rank:65,university:"Osaka University",country:"Japan",continent:"Asia",overallScore:79.5,academicReputation:86.5,employerReputation:84.2,facultyStudent:80.5,citationsPerFaculty:76.2,internationalFaculty:65.8,internationalStudents:62.5,year:2025},
+  {rank:70,university:"University of Helsinki",country:"Finland",continent:"Europe",overallScore:78.8,academicReputation:85.2,employerReputation:78.5,facultyStudent:82.8,citationsPerFaculty:77.5,internationalFaculty:85.2,internationalStudents:84.5,year:2025},
+  {rank:75,university:"Pontificia Universidad Catolica de Chile",country:"Chile",continent:"South America",overallScore:78.2,academicReputation:84.5,employerReputation:85.8,facultyStudent:77.5,citationsPerFaculty:72.8,internationalFaculty:68.5,internationalStudents:65.2,year:2025},
+  {rank:80,university:"University of Cape Town",country:"South Africa",continent:"Africa",overallScore:77.5,academicReputation:83.8,employerReputation:82.5,facultyStudent:75.2,citationsPerFaculty:70.5,internationalFaculty:72.8,internationalStudents:71.5,year:2025},
+  {rank:85,university:"Universidad de Buenos Aires",country:"Argentina",continent:"South America",overallScore:76.8,academicReputation:85.2,employerReputation:80.2,facultyStudent:73.8,citationsPerFaculty:71.2,internationalFaculty:62.5,internationalStudents:60.8,year:2025},
+  {rank:90,university:"University of Sao Paulo",country:"Brazil",continent:"South America",overallScore:75.5,academicReputation:82.8,employerReputation:78.5,facultyStudent:72.5,citationsPerFaculty:68.8,internationalFaculty:58.2,internationalStudents:55.5,year:2025},
+  {rank:95,university:"University of Auckland",country:"New Zealand",continent:"Oceania",overallScore:74.8,academicReputation:82.5,employerReputation:80.8,facultyStudent:75.8,citationsPerFaculty:68.2,internationalFaculty:82.5,internationalStudents:81.2,year:2025},
+  {rank:100,university:"Indian Institute of Technology Delhi",country:"India",continent:"Asia",overallScore:74.2,academicReputation:84.8,employerReputation:88.5,facultyStudent:80.2,citationsPerFaculty:65.8,internationalFaculty:55.2,internationalStudents:50.8,year:2025},
+  {rank:120,university:"Chulalongkorn University",country:"Thailand",continent:"Asia",overallScore:71.5,academicReputation:78.2,employerReputation:82.5,facultyStudent:68.5,citationsPerFaculty:58.2,internationalFaculty:62.8,internationalStudents:60.5,year:2025},
+  {rank:150,university:"University of Malaya",country:"Malaysia",continent:"Asia",overallScore:68.8,academicReputation:75.5,employerReputation:78.8,facultyStudent:65.2,citationsPerFaculty:55.8,internationalFaculty:72.5,internationalStudents:70.2,year:2025},
+  {rank:200,university:"University of Indonesia",country:"Indonesia",continent:"Asia",overallScore:62.5,academicReputation:68.8,employerReputation:72.5,facultyStudent:58.2,citationsPerFaculty:45.8,internationalFaculty:55.2,internationalStudents:52.8,year:2025},
+  {rank:250,university:"University of Nairobi",country:"Kenya",continent:"Africa",overallScore:55.2,academicReputation:62.5,employerReputation:65.8,facultyStudent:48.5,citationsPerFaculty:35.2,internationalFaculty:42.8,internationalStudents:40.5,year:2025},
+  {rank:300,university:"Cairo University",country:"Egypt",continent:"Africa",overallScore:50.8,academicReputation:58.2,employerReputation:62.5,facultyStudent:42.8,citationsPerFaculty:30.5,internationalFaculty:38.5,internationalStudents:35.2,year:2025},
+  {rank:400,university:"University of Dhaka",country:"Bangladesh",continent:"Asia",overallScore:42.5,academicReputation:48.8,employerReputation:52.2,facultyStudent:35.5,citationsPerFaculty:22.8,internationalFaculty:28.2,internationalStudents:25.5,year:2025},
+  {rank:500,university:"University of Lagos",country:"Nigeria",continent:"Africa",overallScore:35.2,academicReputation:40.5,employerReputation:45.8,facultyStudent:28.2,citationsPerFaculty:18.5,internationalFaculty:22.8,internationalStudents:20.2,year:2025},
+  {rank:1,university:"Massachusetts Institute of Technology (MIT)",country:"United States",continent:"North America",overallScore:100,academicReputation:100,employerReputation:100,facultyStudent:99.2,citationsPerFaculty:98.8,internationalFaculty:97.5,internationalStudents:96.2,year:2024},
+  {rank:2,university:"University of Cambridge",country:"United Kingdom",continent:"Europe",overallScore:98.8,academicReputation:99.5,employerReputation:98.8,facultyStudent:97.5,citationsPerFaculty:97.5,internationalFaculty:96.2,internationalStudents:95.5,year:2024},
+  {rank:3,university:"University of Oxford",country:"United Kingdom",continent:"Europe",overallScore:98.5,academicReputation:99.2,employerReputation:98.5,facultyStudent:97.0,citationsPerFaculty:97.2,internationalFaculty:96.0,internationalStudents:95.2,year:2024},
+  {rank:4,university:"Harvard University",country:"United States",continent:"North America",overallScore:98.2,academicReputation:99.8,employerReputation:99.2,facultyStudent:96.5,citationsPerFaculty:99.2,internationalFaculty:88.2,internationalStudents:87.0,year:2024},
+  {rank:5,university:"Stanford University",country:"United States",continent:"North America",overallScore:97.5,academicReputation:99.0,employerReputation:98.5,facultyStudent:96.8,citationsPerFaculty:98.5,internationalFaculty:89.0,internationalStudents:87.8,year:2024},
+];
+
+// ===================== STATE =====================
+const state = {
+  rawData: [],
+  filteredData: [],
+  bookmarks: JSON.parse(localStorage.getItem('qsBookmarks') || '[]'),
+  compareList: [],
+  currentPage: 1,
+  pageSize: CONFIG.defaultPageSize,
+  sortField: 'rank',
+  sortDirection: 'asc',
+  rankRange: 'all',
+  searchQuery: '',
+  darkMode: localStorage.getItem('qsDarkMode') === 'true',
+  charts: {}
+};
+
+// ===================== UTILITY FUNCTIONS =====================
+
+function showToast(message, type) {
+  type = type || 'info';
+  var container = document.getElementById('toastContainer');
+  var toast = document.createElement('div');
+  toast.className = 'toast-msg toast-' + type;
+  var iconMap = { success: 'check-circle', error: 'exclamation-circle', warning: 'exclamation-triangle', info: 'info-circle' };
+  toast.innerHTML = '<i class="fas fa-' + (iconMap[type] || 'info-circle') + '" style="margin-right:8px"></i>' + message;
+  container.appendChild(toast);
+  setTimeout(function() {
+    toast.style.animation = 'toastOut 0.3s ease forwards';
+    setTimeout(function() { toast.remove(); }, 300);
+  }, 3000);
+}
+
+function showLoading(show) {
+  document.getElementById('loadingSpinner').classList.toggle('show', show);
+}
+
+function parseCSV(csv) {
+  var lines = csv.split('\n').filter(function(l) { return l.trim(); });
+  if (lines.length < 2) return [];
+  var headers = parseCSVLine(lines[0]).map(function(h) { return h.trim(); });
+  var data = [];
+  for (var i = 1; i < lines.length; i++) {
+    var values = parseCSVLine(lines[i]);
+    if (values.length >= headers.length) {
+      var row = {};
+      headers.forEach(function(h, idx) { row[h] = values[idx] ? values[idx].trim() : ''; });
+      data.push(row);
+    }
+  }
+  return data;
+}
+
+function parseCSVLine(line) {
+  var result = [];
+  var current = '';
+  var inQuotes = false;
+  for (var i = 0; i < line.length; i++) {
+    var ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
+      else { inQuotes = !inQuotes; }
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current); current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+function normalizeData(rawData) {
+  var fieldMap = {
+    rank: ['rank','ranking','qs rank','qs ranking','world rank','rank#'],
+    university: ['university','university name','institution','name','school'],
+    country: ['country','nation','location'],
+    continent: ['continent','region'],
+    overallScore: ['overall score','score','overall','total score'],
+    academicReputation: ['academic reputation','ar','acad. rep.','academic rep'],
+    employerReputation: ['employer reputation','er','emp. rep.','employer rep'],
+    facultyStudent: ['faculty student','faculty student ratio','f/s ratio','fsr'],
+    citationsPerFaculty: ['citations per faculty','cpf','citations/faculty'],
+    internationalFaculty: ['international faculty','if','intl faculty'],
+    internationalStudents: ['international students','is','intl students'],
+    year: ['year','edition','ranking year'],
+    link: ['link','url','website','web link','official link','reference','href']
+  };
+
+  if (!rawData.length) return [];
+
+  var rawFields = Object.keys(rawData[0]);
+  var mapping = {};
+
+  for (var stdField in fieldMap) {
+    var aliases = fieldMap[stdField];
+    for (var j = 0; j < aliases.length; j++) {
+      var alias = aliases[j];
+      var match = rawFields.find(function(f) { return f.toLowerCase().trim() === alias; });
+      if (match) { mapping[stdField] = match; break; }
+    }
+  }
+
+  var numericFields = ['rank','overallScore','academicReputation','employerReputation','facultyStudent','citationsPerFaculty','internationalFaculty','internationalStudents','year'];
+  // link is NOT numeric - it stays as a string
+
+  return rawData.map(function(row) {
+    var item = {};
+    for (var stdField in mapping) {
+      var rawField = mapping[stdField];
+      var val = row[rawField];
+      if (numericFields.indexOf(stdField) !== -1) {
+        val = parseFloat(String(val).replace(/[^\d.-]/g, '')) || 0;
+      }
+      item[stdField] = val;
+    }
+    for (var k in row) {
+      if (row.hasOwnProperty(k) && !containsValue(mapping, k)) { item[k] = row[k]; }
+    }
+    return item;
+  }).filter(function(item) {
+    // Must have a university name
+    if (!item.university) return false;
+    // Skip schema/definition rows (e.g. "university name", "institution" as data)
+    var uniLower = String(item.university).toLowerCase().trim();
+    var schemaKeywords = ['university name','institution','name','school','column','accepted aliases','example','text','number'];
+    if (schemaKeywords.indexOf(uniLower) !== -1) return false;
+    // Must have a numeric rank > 0
+    if (!item.rank || item.rank <= 0) return false;
+    return true;
+  });
+}
+
+function containsValue(obj, val) {
+  for (var k in obj) {
+    if (obj.hasOwnProperty(k) && obj[k] === val) return true;
+  }
+  return false;
+}
+
+function getRankBadgeClass(rank) {
+  if (rank <= 10) return 'rank-elite';
+  if (rank <= 50) return 'rank-top50';
+  if (rank <= 100) return 'rank-top100';
+  if (rank <= 200) return 'rank-top200';
+  if (rank <= 500) return 'rank-top500';
+  return 'rank-other';
+}
+
+function getRankLabel(rank) {
+  if (rank <= 10) return 'Elite';
+  if (rank <= 50) return 'Top 50';
+  if (rank <= 100) return 'Top 100';
+  if (rank <= 200) return 'Top 200';
+  if (rank <= 500) return 'Top 500';
+  return 'Ranked';
+}
+
+function animateCounter(element, target, duration, isDecimal) {
+  duration = duration || 1200;
+  isDecimal = isDecimal || false;
+  var start = 0;
+  var startTime = performance.now();
+  function update(currentTime) {
+    var elapsed = currentTime - startTime;
+    var progress = Math.min(elapsed / duration, 1);
+    var eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+    var current = start + (target - start) * eased;
+    element.textContent = isDecimal ? current.toFixed(1) : Math.round(current);
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+function escapeAttr(str) {
+  return str.replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ===================== DATA MANAGEMENT =====================
+
+async function connectSheet() {
+  var urlInput = document.getElementById('sheetUrl');
+  var url = urlInput.value.trim();
+  if (!url) {
+    showToast('Please enter a Google Sheets URL', 'warning');
+    return;
+  }
+
+  // Step 1: Extract the Sheet ID from any Google Sheets URL format
+  var sheetId = null;
+
+  // Format 1: Share/Edit URL — /d/{ID}/edit?usp=sharing
+  var editMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (editMatch && !url.includes('/d/e/')) {
+    sheetId = editMatch[1];
+  }
+  // Format 2: Published URL — /d/e/2PACX-.../pub?output=csv
+  else if (url.match(/\/spreadsheets\/d\/e\/([a-zA-Z0-9_-]+)/)) {
+    var pubMatch = url.match(/\/spreadsheets\/d\/e\/([a-zA-Z0-9_-]+)/);
+    sheetId = pubMatch[1];
+  }
+
+  if (!sheetId) {
+    showToast('Invalid URL. Share your sheet (Share > Anyone with the link > Viewer) and paste the link.', 'error');
+    return;
+  }
+
+  showLoading(true);
+  var btn = document.getElementById('btnConnect');
+  btn.disabled = true;
+
+  try {
+    // Step 2: Use Google Visualization API to fetch CSV data
+    // This works around CORS by using the gviz/tq endpoint with CSV output
+    var isPublished = url.includes('/d/e/');
+    var csvUrl;
+
+    if (isPublished) {
+      // Published sheets use /d/e/ format
+      csvUrl = 'https://docs.google.com/spreadsheets/d/e/' + sheetId + '/pub?output=csv';
+    } else {
+      // Shared sheets use gviz/tq endpoint which returns CSV
+      csvUrl = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=out:csv';
+    }
+
+    var csv = null;
+
+    // Try 1: Direct fetch (might work for some browsers/configurations)
+    try {
+      var response = await fetch(csvUrl, { mode: 'cors' });
+      if (response.ok) {
+        csv = await response.text();
+      }
+    } catch(e) {
+      console.log('Direct fetch blocked by CORS, trying script injection method...');
+    }
+
+    // Try 2: Use script injection with Google Visualization API (bypasses CORS)
+    if (!csv) {
+      try {
+        csv = await fetchSheetViaGviz(sheetId, isPublished);
+      } catch(e) {
+        console.log('Gviz script method failed: ' + e.message);
+      }
+    }
+
+    // Try 3: CORS proxy as last resort
+    if (!csv) {
+      var exportUrl = isPublished
+        ? 'https://docs.google.com/spreadsheets/d/e/' + sheetId + '/pub?output=csv'
+        : 'https://docs.google.com/spreadsheets/d/' + sheetId + '/export?format=csv';
+
+      var proxyUrls = [
+        'https://api.allorigins.win/raw?url=' + encodeURIComponent(exportUrl),
+        'https://corsproxy.io/?' + encodeURIComponent(exportUrl),
+        'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(exportUrl)
+      ];
+
+      for (var i = 0; i < proxyUrls.length; i++) {
+        try {
+          console.log('Trying CORS proxy ' + (i+1) + '...');
+          var resp = await fetch(proxyUrls[i]);
+          if (resp.ok) {
+            csv = await resp.text();
+            console.log('Proxy ' + (i+1) + ' succeeded!');
+            break;
+          }
+        } catch(e) {
+          console.log('Proxy ' + (i+1) + ' failed: ' + e.message);
+        }
+      }
+    }
+
+    if (!csv) {
+      throw new Error('Could not fetch data. Please try: (1) Make sure the sheet is shared with "Anyone with the link" as Viewer, (2) Try clicking Connect again, or (3) Use "Load Sample Data" to preview the dashboard.');
+    }
+
+    var parsed = parseCSV(csv);
+    if (!parsed.length) throw new Error('No data found in the sheet');
+
+    state.rawData = normalizeData(parsed);
+    if (!state.rawData.length) throw new Error('No valid university data found. Make sure your sheet has columns: Rank, University, Country, Continent, Overall Score, Academic Reputation, Employer Reputation, Faculty Student, Citations Per Faculty, International Faculty, International Students, Year, Link.');
+
+    state.currentPage = 1;
+    applyFilters();
+    updateFilterOptions();
+    updateLastUpdated(new Date());
+    showToast('Loaded ' + state.rawData.length + ' universities from Google Sheets', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('Failed: ' + err.message, 'error');
+  } finally {
+    showLoading(false);
+    btn.disabled = false;
+  }
+}
+
+/**
+ * Fetch sheet data using Google Visualization API with script injection.
+ * This completely bypasses CORS by injecting a <script> tag that calls
+ * a global callback function with the data.
+ */
+function fetchSheetViaGviz(sheetId, isPublished) {
+  return new Promise(function(resolve, reject) {
+    var callbackName = 'gvizCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+
+    // Set timeout to avoid hanging forever
+    var timeout = setTimeout(function() {
+      cleanup();
+      reject(new Error('Gviz request timed out'));
+    }, 15000);
+
+    // Create the global callback that receives the data
+    window[callbackName] = function(data) {
+      clearTimeout(timeout);
+      cleanup();
+      if (data && data.table) {
+        try {
+          var csv = gvizToCSV(data.table);
+          resolve(csv);
+        } catch(e) {
+          reject(e);
+        }
+      } else {
+        reject(new Error('No data returned from gviz'));
+      }
+    };
+
+    // Build the gviz query URL
+    var queryUrl;
+    if (isPublished) {
+      queryUrl = 'https://docs.google.com/spreadsheets/d/e/' + sheetId + '/pub/gviz/tq?tqx=responseHandler:' + callbackName;
+    } else {
+      queryUrl = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=responseHandler:' + callbackName;
+    }
+
+    // Inject script tag (bypasses CORS)
+    var script = document.createElement('script');
+    script.src = queryUrl;
+    script.onerror = function() {
+      clearTimeout(timeout);
+      cleanup();
+      reject(new Error('Script injection failed'));
+    };
+    document.head.appendChild(script);
+
+    function cleanup() {
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+  });
+}
+
+/**
+ * Convert Google Visualization API response (table object) to CSV string
+ */
+function gvizToCSV(table) {
+  if (!table || !table.cols || !table.rows) return '';
+
+  var headers = table.cols.map(function(col) {
+    return col.label || col.id || '';
+  });
+
+  var lines = [headers.join(',')];
+
+  table.rows.forEach(function(row) {
+    var values = table.cols.map(function(_, colIdx) {
+      var cell = row.c[colIdx];
+      if (!cell || cell.v === null || cell.v === undefined) return '';
+      // Check if cell has a hyperlink (gviz stores it as an object with link info)
+      // If the cell has a 'f' (formatted) property containing a hyperlink, extract the URL
+      var val;
+      if (cell.p && cell.p.link) {
+        // Cell has a link property — use the URL
+        val = cell.p.link;
+      } else {
+        val = String(cell.v);
+      }
+      // Escape commas and quotes
+      if (val.indexOf(',') !== -1 || val.indexOf('"') !== -1 || val.indexOf('\n') !== -1) {
+        val = '"' + val.replace(/"/g, '""') + '"';
+      }
+      return val;
+    });
+    lines.push(values.join(','));
+  });
+
+  return lines.join('\n');
+}
+
+function loadSampleData() {
+  state.rawData = SAMPLE_DATA.slice();
+  state.currentPage = 1;
+  applyFilters();
+  updateFilterOptions();
+  updateLastUpdated(new Date());
+  showToast('Loaded ' + state.rawData.length + ' sample universities', 'success');
+}
+
+function updateLastUpdated(date) {
+  var el = document.querySelector('#lastUpdated span');
+  el.textContent = 'Updated: ' + date.toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) + ' ' + date.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+}
+
+// ===================== FILTER & SORT =====================
+
+function applyFilters() {
+  var country = document.getElementById('filterCountry').value;
+  var continent = document.getElementById('filterContinent').value;
+  var year = document.getElementById('filterYear').value;
+  var minScore = parseFloat(document.getElementById('filterMinScore').value) || 0;
+  var query = state.searchQuery.toLowerCase();
+
+  state.filteredData = state.rawData.filter(function(item) {
+    if (country && item.country !== country) return false;
+    if (continent && item.continent !== continent) return false;
+    if (year && item.year !== parseInt(year)) return false;
+    if (minScore && item.overallScore < minScore) return false;
+    if (state.rankRange !== 'all') {
+      var maxRank = parseInt(state.rankRange);
+      if (item.rank > maxRank) return false;
+    }
+    if (query) {
+      var searchStr = (item.university + ' ' + item.country + ' ' + item.continent + ' ' + item.rank + ' ' + item.overallScore).toLowerCase();
+      if (searchStr.indexOf(query) === -1) return false;
+    }
+    return true;
+  });
+
+  state.filteredData.sort(function(a, b) {
+    var aVal = a[state.sortField];
+    var bVal = b[state.sortField];
+    if (typeof aVal === 'string') { aVal = aVal.toLowerCase(); bVal = (bVal || '').toLowerCase(); }
+    if (aVal < bVal) return state.sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return state.sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  state.currentPage = 1;
+  renderAll();
+}
+
+function sortBy(field) {
+  if (state.sortField === field) {
+    state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+  } else {
+    state.sortField = field;
+    state.sortDirection = 'asc';
+  }
+  applyFilters();
+}
+
+function setRankRange(btn) {
+  document.querySelectorAll('.rank-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  state.rankRange = btn.dataset.range;
+  applyFilters();
+}
+
+function resetFilters() {
+  document.getElementById('filterCountry').value = '';
+  document.getElementById('filterContinent').value = '';
+  document.getElementById('filterYear').value = '';
+  document.getElementById('filterMinScore').value = '';
+  document.getElementById('globalSearch').value = '';
+  state.searchQuery = '';
+  state.rankRange = 'all';
+  document.querySelectorAll('.rank-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelector('.rank-btn[data-range="all"]').classList.add('active');
+  applyFilters();
+  showToast('Filters reset', 'info');
+}
+
+function updateFilterOptions() {
+  var countries = uniqueSorted(state.rawData.map(function(d) { return d.country; }));
+  var continents = uniqueSorted(state.rawData.map(function(d) { return d.continent; }));
+  var years = uniqueSorted(state.rawData.map(function(d) { return d.year; })).sort(function(a,b) { return b-a; });
+
+  var cSelect = document.getElementById('filterCountry');
+  cSelect.innerHTML = '<option value="">All Countries</option>' + countries.map(function(c) { return '<option value="' + escapeAttr(c) + '">' + escapeAttr(c) + '</option>'; }).join('');
+
+  var coSelect = document.getElementById('filterContinent');
+  coSelect.innerHTML = '<option value="">All Continents</option>' + continents.map(function(c) { return '<option value="' + escapeAttr(c) + '">' + escapeAttr(c) + '</option>'; }).join('');
+
+  var ySelect = document.getElementById('filterYear');
+  ySelect.innerHTML = '<option value="">All Years</option>' + years.map(function(y) { return '<option value="' + y + '">' + y + '</option>'; }).join('');
+}
+
+function uniqueSorted(arr) {
+  var seen = {};
+  return arr.filter(function(v) {
+    if (seen[v]) return false;
+    seen[v] = true;
+    return true;
+  }).sort();
+}
+
+// ===================== RENDER FUNCTIONS =====================
+
+function renderAll() {
+  renderCards();
+  renderTable();
+  renderCharts();
+}
+
+function renderCards() {
+  var data = state.filteredData;
+  var total = data.length;
+  var countrySet = {};
+  var continentSet = {};
+  var countryCount = {};
+  var totalScore = 0;
+
+  data.forEach(function(d) {
+    countrySet[d.country] = true;
+    continentSet[d.continent] = true;
+    countryCount[d.country] = (countryCount[d.country] || 0) + 1;
+    totalScore += d.overallScore;
+  });
+
+  var countries = Object.keys(countrySet).length;
+  var continents = Object.keys(continentSet).length;
+  var topRanked = data.length ? data.reduce(function(a, b) { return a.rank < b.rank ? a : b; }) : null;
+  var avgScore = data.length ? totalScore / data.length : 0;
+
+  var topCountry = Object.entries(countryCount).sort(function(a,b) { return b[1] - a[1]; })[0];
+
+  animateCounter(document.getElementById('statTotal'), total);
+  animateCounter(document.getElementById('statCountries'), countries);
+  animateCounter(document.getElementById('statContinents'), continents);
+  animateCounter(document.getElementById('statAvgScore'), avgScore, 1200, true);
+
+  document.getElementById('statTopRanked').textContent = topRanked ? (topRanked.university.length > 30 ? topRanked.university.substring(0, 30) + '...' : topRanked.university) : '--';
+  document.getElementById('statTopCountry').textContent = topCountry ? (topCountry[0] + ' (' + topCountry[1] + ')') : '--';
+}
+
+function renderTable() {
+  var data = state.filteredData;
+  var tbody = document.getElementById('tableBody');
+  var emptyState = document.getElementById('emptyState');
+
+  var start = (state.currentPage - 1) * state.pageSize;
+  var end = Math.min(start + state.pageSize, data.length);
+  var pageData = data.slice(start, end);
+
+  if (data.length === 0) {
+    tbody.innerHTML = '';
+    emptyState.style.display = 'block';
+    document.getElementById('showingFrom').textContent = '0';
+    document.getElementById('showingTo').textContent = '0';
+    document.getElementById('totalResults').textContent = '0';
+    renderPagination();
+    return;
+  }
+
+  emptyState.style.display = 'none';
+  document.getElementById('showingFrom').textContent = start + 1;
+  document.getElementById('showingTo').textContent = end;
+  document.getElementById('totalResults').textContent = data.length;
+
+  var html = '';
+  pageData.forEach(function(item, idx) {
+    var isBookmarked = state.bookmarks.indexOf(item.university) !== -1;
+    var isCompared = state.compareList.some(function(c) { return c.university === item.university && c.rank === item.rank; });
+    var scoreWidth = Math.max(0, Math.min(100, item.overallScore));
+    var safeName = escapeAttr(item.university);
+    html += '<tr style="animation: fadeInUp 0.4s ease both; animation-delay: ' + (idx * 0.03) + 's">' +
+      '<td><span class="rank-badge ' + getRankBadgeClass(item.rank) + ' tip" data-tip="' + getRankLabel(item.rank) + '">' + item.rank + '</span></td>' +
+      '<td style="font-weight:600;max-width:280px">' + escapeAttr(item.university) +
+        (item.year ? ' <span style="font-size:0.7rem;color:var(--text-muted);margin-left:4px">(' + item.year + ')</span>' : '') +
+      '</td>' +
+      '<td><span class="country-badge tip" data-tip="' + escapeAttr(item.country) + '">' + escapeAttr(item.country.length > 14 ? item.country.substring(0,12) + '...' : item.country) + '</span></td>' +
+      '<td><span class="continent-badge tip" data-tip="' + escapeAttr(item.continent) + '">' + escapeAttr(item.continent) + '</span></td>' +
+      '<td>' +
+        '<span style="font-weight:700;color:var(--accent-primary)">' + item.overallScore.toFixed(1) + '</span>' +
+        '<div class="score-bar"><div class="score-bar-fill" style="width:' + scoreWidth + '%"></div></div>' +
+      '</td>' +
+      '<td>' + (item.academicReputation ? item.academicReputation.toFixed(1) : '-') + '</td>' +
+      '<td>' + (item.employerReputation ? item.employerReputation.toFixed(1) : '-') + '</td>' +
+      '<td>' +
+        (item.link ? '<a href="https://www.google.com" target="_blank" rel="noopener noreferrer" class="link-btn" title="' + escapeAttr(String(item.link)) + '">Click Here</a>' : '<span style="color:var(--text-muted);font-size:0.82rem">-</span>') +
+      '</td>' +
+      '<td>' +
+        '<button class="action-icon ' + (isBookmarked ? 'bookmarked' : '') + '" onclick="toggleBookmark(\'' + safeName + '\')" title="Bookmark">' +
+          '<i class="fas fa-bookmark"></i>' +
+        '</button>' +
+        '<button class="action-icon ' + (isCompared ? 'compared' : '') + '" onclick="toggleCompare(' + item.rank + ',\'' + safeName + '\')" title="Compare">' +
+          '<i class="fas fa-code-compare"></i>' +
+        '</button>' +
+      '</td>' +
+    '</tr>';
+  });
+
+  tbody.innerHTML = html;
+  renderPagination();
+}
+
+function renderPagination() {
+  var data = state.filteredData;
+  var totalPages = Math.ceil(data.length / state.pageSize) || 1;
+  var pageNumbersEl = document.getElementById('pageNumbers');
+  var pageInfo = document.getElementById('pageInfo');
+
+  document.getElementById('btnPrev').disabled = state.currentPage <= 1;
+  document.getElementById('btnNext').disabled = state.currentPage >= totalPages;
+
+  var pages = [];
+  var maxVisible = 5;
+  var startPage = Math.max(1, state.currentPage - Math.floor(maxVisible / 2));
+  var endPage = Math.min(totalPages, startPage + maxVisible - 1);
+  if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+
+  if (startPage > 1) { pages.push(1); if (startPage > 2) pages.push('...'); }
+  for (var i = startPage; i <= endPage; i++) pages.push(i);
+  if (endPage < totalPages) { if (endPage < totalPages - 1) pages.push('...'); pages.push(totalPages); }
+
+  var pagesHtml = '';
+  pages.forEach(function(p) {
+    if (p === '...') {
+      pagesHtml += '<span style="padding:0 4px;color:var(--text-muted)">...</span>';
+    } else {
+      pagesHtml += '<button class="page-btn ' + (p === state.currentPage ? 'active' : '') + '" onclick="goToPage(' + p + ')">' + p + '</button>';
+    }
+  });
+  pageNumbersEl.innerHTML = pagesHtml;
+  pageInfo.textContent = 'Page ' + state.currentPage + ' of ' + totalPages;
+}
+
+function changePage(delta) {
+  var totalPages = Math.ceil(state.filteredData.length / state.pageSize) || 1;
+  state.currentPage = Math.max(1, Math.min(totalPages, state.currentPage + delta));
+  renderTable();
+  document.getElementById('tableSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function goToPage(page) {
+  state.currentPage = page;
+  renderTable();
+}
+
+function changePageSize() {
+  state.pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+  state.currentPage = 1;
+  renderTable();
+}
+
+// ===================== CHARTS =====================
+
+function renderCharts() {
+  renderTop10Chart();
+  renderCountryChart();
+  renderContinentChart();
+}
+
+function getChartTextColor() {
+  return state.darkMode ? '#8B949E' : '#4A4A6A';
+}
+
+function getChartGridColor() {
+  return state.darkMode ? 'rgba(139,148,158,0.15)' : 'rgba(74,74,106,0.08)';
+}
+
+function renderTop10Chart() {
+  var data = state.filteredData.slice(0, 10).slice().reverse();
+  if (state.charts.top10) state.charts.top10.destroy();
+
+  var ctx = document.getElementById('chartTop10').getContext('2d');
+  state.charts.top10 = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(function(d) { return d.university.length > 25 ? d.university.substring(0,22) + '...' : d.university; }),
+      datasets: [{
+        label: 'Overall Score',
+        data: data.map(function(d) { return d.overallScore; }),
+        backgroundColor: data.map(function(_, i) {
+          var alpha = 0.4 + (i / data.length) * 0.6;
+          return 'rgba(27,67,50,' + alpha + ')';
+        }),
+        borderColor: 'rgba(27,67,50,0.8)',
+        borderWidth: 1,
+        borderRadius: 6,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: state.darkMode ? '#161B22' : '#fff',
+          titleColor: state.darkMode ? '#E6EDF3' : '#1A1A2E',
+          bodyColor: state.darkMode ? '#8B949E' : '#4A4A6A',
+          borderColor: state.darkMode ? '#30363D' : '#D4CFC4',
+          borderWidth: 1,
+          cornerRadius: 8,
+          padding: 12,
+          callbacks: {
+            label: function(ctx) { return 'Score: ' + ctx.parsed.x.toFixed(1); }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: getChartGridColor() }, ticks: { color: getChartTextColor(), font: { size: 11 } } },
+        y: { grid: { display: false }, ticks: { color: getChartTextColor(), font: { size: 11 } } }
+      }
+    }
+  });
+  document.getElementById('chartTop10').parentElement.style.height = Math.max(300, data.length * 35) + 'px';
+}
+
+function renderCountryChart() {
+  var data = state.filteredData;
+  var countryCount = {};
+  data.forEach(function(d) { countryCount[d.country] = (countryCount[d.country] || 0) + 1; });
+  var sorted = Object.entries(countryCount).sort(function(a,b) { return b[1] - a[1]; }).slice(0, 8);
+
+  if (state.charts.country) state.charts.country.destroy();
+
+  var ctx = document.getElementById('chartCountry').getContext('2d');
+  state.charts.country = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: sorted.map(function(s) { return s[0]; }),
+      datasets: [{
+        data: sorted.map(function(s) { return s[1]; }),
+        backgroundColor: CONFIG.chartColors.slice(0, sorted.length),
+        borderWidth: 2,
+        borderColor: state.darkMode ? '#161B22' : '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      cutout: '55%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: getChartTextColor(), font: { size: 10 }, padding: 8, usePointStyle: true, pointStyleWidth: 8 }
+        },
+        tooltip: {
+          backgroundColor: state.darkMode ? '#161B22' : '#fff',
+          titleColor: state.darkMode ? '#E6EDF3' : '#1A1A2E',
+          bodyColor: state.darkMode ? '#8B949E' : '#4A4A6A',
+          borderColor: state.darkMode ? '#30363D' : '#D4CFC4',
+          borderWidth: 1,
+          cornerRadius: 8,
+          padding: 10,
+          callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.parsed + ' universities'; } }
+        }
+      }
+    }
+  });
+}
+
+function renderContinentChart() {
+  var data = state.filteredData;
+  var continentData = {};
+  data.forEach(function(d) {
+    if (!continentData[d.continent]) continentData[d.continent] = { count: 0, totalScore: 0 };
+    continentData[d.continent].count++;
+    continentData[d.continent].totalScore += d.overallScore;
+  });
+
+  var entries = Object.entries(continentData).sort(function(a,b) { return b[1].count - a[1].count; });
+
+  if (state.charts.continent) state.charts.continent.destroy();
+
+  var ctx = document.getElementById('chartContinent').getContext('2d');
+  state.charts.continent = new Chart(ctx, {
+    type: 'polarArea',
+    data: {
+      labels: entries.map(function(e) { return e[0]; }),
+      datasets: [{
+        data: entries.map(function(e) { return e[1].count; }),
+        backgroundColor: entries.map(function(e) {
+          var c = CONFIG.continentColors[e[0]] || '#6B7B8D';
+          return c + '88';
+        }),
+        borderColor: entries.map(function(e) { return CONFIG.continentColors[e[0]] || '#6B7B8D'; }),
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: getChartTextColor(), font: { size: 10 }, padding: 6, usePointStyle: true, pointStyleWidth: 8 }
+        },
+        tooltip: {
+          backgroundColor: state.darkMode ? '#161B22' : '#fff',
+          titleColor: state.darkMode ? '#E6EDF3' : '#1A1A2E',
+          bodyColor: state.darkMode ? '#8B949E' : '#4A4A6A',
+          borderColor: state.darkMode ? '#30363D' : '#D4CFC4',
+          borderWidth: 1,
+          cornerRadius: 8,
+          padding: 10,
+          callbacks: {
+            label: function(ctx) {
+              var entry = entries[ctx.dataIndex];
+              var avg = (entry[1].totalScore / entry[1].count).toFixed(1);
+              return ctx.label + ': ' + entry[1].count + ' univ. (avg: ' + avg + ')';
+            }
+          }
+        }
+      },
+      scales: {
+        r: {
+          grid: { color: getChartGridColor() },
+          ticks: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// ===================== BOOKMARKS =====================
+
+function toggleBookmark(university) {
+  var idx = state.bookmarks.indexOf(university);
+  if (idx > -1) {
+    state.bookmarks.splice(idx, 1);
+    showToast('Removed "' + university + '" from bookmarks', 'info');
+  } else {
+    state.bookmarks.push(university);
+    showToast('Bookmarked "' + university + '"', 'success');
+  }
+  localStorage.setItem('qsBookmarks', JSON.stringify(state.bookmarks));
+  renderTable();
+  renderBookmarks();
+}
+
+function clearBookmarks() {
+  state.bookmarks = [];
+  localStorage.setItem('qsBookmarks', JSON.stringify(state.bookmarks));
+  renderTable();
+  renderBookmarks();
+  showToast('All bookmarks cleared', 'info');
+}
+
+function renderBookmarks() {
+  var section = document.getElementById('bookmarkSection');
+  var list = document.getElementById('bookmarkList');
+  var bookmarkedData = state.rawData.filter(function(d) { return state.bookmarks.indexOf(d.university) !== -1; });
+
+  if (bookmarkedData.length === 0) {
+    section.classList.remove('has-items');
+    return;
+  }
+
+  section.classList.add('has-items');
+  var html = '';
+  bookmarkedData.forEach(function(d) {
+    var safeName = escapeAttr(d.university);
+    html += '<span class="bookmark-chip">' +
+      '<span class="rank-badge ' + getRankBadgeClass(d.rank) + '" style="font-size:0.7rem;padding:2px 6px;min-width:auto">#' + d.rank + '</span>' +
+      (d.university.length > 25 ? d.university.substring(0,22) + '...' : escapeAttr(d.university)) +
+      ' <span class="remove-bm" onclick="toggleBookmark(\'' + safeName + '\')"><i class="fas fa-times"></i></span>' +
+    '</span>';
+  });
+  list.innerHTML = html;
+}
+
+// ===================== COMPARISON =====================
+
+function toggleCompare(rank, university) {
+  var item = state.rawData.find(function(d) { return d.rank === rank && d.university === university; });
+  if (!item) return;
+
+  var idx = state.compareList.findIndex(function(c) { return c.university === item.university && c.rank === item.rank; });
+  if (idx > -1) {
+    state.compareList.splice(idx, 1);
+    showToast('Removed from comparison', 'info');
+  } else {
+    if (state.compareList.length >= CONFIG.maxCompare) {
+      showToast('Maximum ' + CONFIG.maxCompare + ' universities for comparison', 'warning');
+      return;
+    }
+    state.compareList.push(item);
+    showToast('Added "' + university + '" to comparison', 'success');
+  }
+
+  updateCompareBar();
+  renderTable();
+}
+
+function updateCompareBar() {
+  var bar = document.getElementById('compareBar');
+  var items = document.getElementById('compareItems');
+
+  if (state.compareList.length < 2) {
+    bar.classList.remove('visible');
+    if (state.compareList.length === 1) {
+      bar.classList.add('visible');
+      items.innerHTML = '<span class="compare-chip">' + escapeAttr(state.compareList[0].university.substring(0,25)) + '</span><span style="font-size:0.82rem;color:var(--text-muted)">Select at least 1 more</span>';
+    }
+    return;
+  }
+
+  bar.classList.add('visible');
+  var html = '';
+  state.compareList.forEach(function(d) {
+    var safeName = escapeAttr(d.university);
+    html += '<span class="compare-chip">' +
+      '#' + d.rank + ' ' + (d.university.length > 20 ? d.university.substring(0,20) + '...' : escapeAttr(d.university)) +
+      ' <span class="remove-chip" onclick="toggleCompare(' + d.rank + ',\'' + safeName + '\')"><i class="fas fa-times"></i></span>' +
+    '</span>';
+  });
+  items.innerHTML = html;
+}
+
+function clearCompare() {
+  state.compareList = [];
+  updateCompareBar();
+  renderTable();
+}
+
+function openCompareModal() {
+  if (state.compareList.length < 2) {
+    showToast('Select at least 2 universities to compare', 'warning');
+    return;
+  }
+
+  var modal = document.getElementById('compareModal');
+  modal.classList.add('show');
+
+  renderCompareChart();
+  renderCompareTable();
+
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCompareModal() {
+  var modal = document.getElementById('compareModal');
+  modal.classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function renderCompareChart() {
+  if (state.charts.compare) state.charts.compare.destroy();
+
+  var metrics = ['overallScore','academicReputation','employerReputation','facultyStudent','citationsPerFaculty','internationalFaculty','internationalStudents'];
+  var metricLabels = ['Overall','Academic Rep.','Employer Rep.','Faculty/Student','Citations','Intl Faculty','Intl Students'];
+  var colors = ['#1B4332','#B8860B','#C0392B','#3B7A8B'];
+
+  var ctx = document.getElementById('chartCompare').getContext('2d');
+  state.charts.compare = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: metricLabels,
+      datasets: state.compareList.map(function(d, i) {
+        return {
+          label: d.university.length > 20 ? d.university.substring(0,18) + '...' : d.university,
+          data: metrics.map(function(m) { return d[m] || 0; }),
+          borderColor: colors[i],
+          backgroundColor: colors[i] + '22',
+          borderWidth: 2,
+          pointBackgroundColor: colors[i],
+          pointRadius: 4
+        };
+      })
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: getChartTextColor(), font: { size: 11 }, padding: 12, usePointStyle: true }
+        }
+      },
+      scales: {
+        r: {
+          angleLines: { color: getChartGridColor() },
+          grid: { color: getChartGridColor() },
+          pointLabels: { color: getChartTextColor(), font: { size: 10 } },
+          ticks: { display: false },
+          suggestedMin: 0,
+          suggestedMax: 100
+        }
+      }
+    }
+  });
+}
+
+function renderCompareTable() {
+  var wrap = document.getElementById('compareTableWrap');
+  var metrics = [
+    ['rank','Rank'],['overallScore','Overall Score'],['academicReputation','Academic Reputation'],
+    ['employerReputation','Employer Reputation'],['facultyStudent','Faculty/Student Ratio'],
+    ['citationsPerFaculty','Citations per Faculty'],['internationalFaculty','International Faculty'],
+    ['internationalStudents','International Students'],['country','Country'],['continent','Continent'],
+    ['link','Link']
+  ];
+
+  var bestValues = {};
+  metrics.forEach(function(m) {
+    var key = m[0];
+    var vals = state.compareList.map(function(d) { return d[key]; }).filter(function(v) { return typeof v === 'number'; });
+    if (vals.length) {
+      bestValues[key] = key === 'rank' ? Math.min.apply(null, vals) : Math.max.apply(null, vals);
+    }
+  });
+
+  var html = '<table class="compare-table"><thead><tr><th>Metric</th>';
+  state.compareList.forEach(function(d) {
+    html += '<th>' + (d.university.length > 25 ? d.university.substring(0,22) + '...' : escapeAttr(d.university)) + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  metrics.forEach(function(m) {
+    var key = m[0];
+    var label = m[1];
+    html += '<tr><td>' + label + '</td>';
+    state.compareList.forEach(function(d) {
+      var val = d[key];
+      var isBest = typeof val === 'number' && val === bestValues[key] && state.compareList.length > 1;
+      html += '<td class="' + (isBest ? 'compare-highlight' : '') + '">';
+      html += (typeof val === 'number' ? (key === 'rank' ? '#' + val : val.toFixed(1)) : (key === 'link' && val ? '<a href="' + escapeAttr(String(val)) + '" target="_blank" rel="noopener noreferrer" class="link-btn" style="font-size:0.72rem;padding:3px 10px">Visit</a>' : (val || '-')));
+      html += '</td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ===================== EXPORT =====================
+
+function exportCSV() {
+  if (!state.filteredData.length) {
+    showToast('No data to export', 'warning');
+    return;
+  }
+
+  var headers = ['rank','university','country','continent','overallScore','academicReputation','employerReputation','facultyStudent','citationsPerFaculty','internationalFaculty','internationalStudents','year','link'];
+  var headerLabels = ['Rank','University','Country','Continent','Overall Score','Academic Reputation','Employer Reputation','Faculty Student','Citations Per Faculty','International Faculty','International Students','Year','Link'];
+
+  var csv = headerLabels.join(',') + '\n';
+  state.filteredData.forEach(function(d) {
+    csv += headers.map(function(h) {
+      var val = d[h] !== undefined ? d[h] : '';
+      if (typeof val === 'string' && (val.indexOf(',') !== -1 || val.indexOf('"') !== -1)) {
+        val = '"' + val.replace(/"/g, '""') + '"';
+      }
+      return val;
+    }).join(',') + '\n';
+  });
+
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'QS_Ranking_Data_' + new Date().toISOString().split('T')[0] + '.csv';
+  link.click();
+  URL.revokeObjectURL(link.href);
+  showToast('CSV exported successfully', 'success');
+}
+
+// ===================== DARK MODE =====================
+
+function toggleDarkMode() {
+  state.darkMode = !state.darkMode;
+  document.documentElement.setAttribute('data-theme', state.darkMode ? 'dark' : 'light');
+  localStorage.setItem('qsDarkMode', state.darkMode);
+  var icon = document.querySelector('#btnDarkMode i');
+  icon.className = state.darkMode ? 'fas fa-sun' : 'fas fa-moon';
+
+  renderCharts();
+  if (state.compareList.length >= 2 && document.getElementById('compareModal').classList.contains('show')) {
+    renderCompareChart();
+  }
+}
+
+// ===================== SCROLL REVEAL =====================
+
+function initScrollReveal() {
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(function(el) {
+    observer.observe(el);
+  });
+}
+
+// ===================== KEYBOARD SHORTCUTS =====================
+
+function initKeyboardShortcuts() {
+  document.addEventListener('keydown', function(e) {
+    // Ctrl+K or Cmd+K to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      document.getElementById('globalSearch').focus();
+    }
+    // Escape to close modal
+    if (e.key === 'Escape') {
+      closeCompareModal();
+    }
+  });
+}
+
+// ===================== INITIALIZATION =====================
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Apply saved dark mode
+  if (state.darkMode) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    var icon = document.querySelector('#btnDarkMode i');
+    if (icon) icon.className = 'fas fa-sun';
+  }
+
+  // Event listeners
+  document.getElementById('btnDarkMode').addEventListener('click', toggleDarkMode);
+
+  document.getElementById('btnBookmarks').addEventListener('click', function() {
+    var section = document.getElementById('bookmarkSection');
+    if (section.classList.contains('has-items')) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      showToast('No bookmarks yet. Click the bookmark icon on any university to save it.', 'info');
+    }
+  });
+
+  // Global search with debounce
+  var searchTimeout = null;
+  document.getElementById('globalSearch').addEventListener('input', function(e) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(function() {
+      state.searchQuery = e.target.value;
+      applyFilters();
+    }, 300);
+  });
+
+  // Close modal on overlay click
+  document.getElementById('compareModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCompareModal();
+  });
+
+  // Initialize scroll reveal
+  initScrollReveal();
+
+  // Initialize keyboard shortcuts
+  initKeyboardShortcuts();
+
+  // Auto-connect to the pre-filled Google Sheet URL
+  var preFilledUrl = document.getElementById('sheetUrl').value.trim();
+  if (preFilledUrl) {
+    connectSheet();
+  } else {
+    // Fallback: load sample data if no URL is set
+    loadSampleData();
+  }
+});
+</script>
+</body>
+</html>

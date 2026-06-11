@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Audit Dashboard | scope.paruluniversity.ac.in</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #e0e7ff;
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --gray-100: #f3f4f6;
+            --gray-800: #1f2937;
+            --white: #ffffff;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: var(--gray-800);
+            line-height: 1.5;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 100%);
+            color: var(--white);
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-info h1 { font-size: 28px; margin-bottom: 5px; }
+        .header-info p { opacity: 0.9; font-size: 14px; }
+        .header-badge {
+            background: rgba(255,255,255,0.15);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            background: var(--white);
+            padding: 6px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover { background: var(--gray-100); color: var(--primary); }
+        .tab-btn.active { background: var(--primary); color: var(--white); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+
+        /* Tab Content */
+        .tab-content { display: none; animation: fadeEffect 0.5s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeEffect { from {opacity: 0; margin-top: 10px;} to {opacity: 1; margin-top: 0;} }
+
+        /* Cards & Grid */
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid #e5e7eb;
+        }
+
+        .card-title { font-size: 14px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+
+        /* Charts & Metrics */
+        .donut-chart-container { position: relative; width: 150px; height: 150px; margin: 0 auto; }
+        .donut-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+        .donut-score { font-size: 32px; font-weight: 800; color: var(--danger); }
+        .donut-label { font-size: 12px; color: #64748b; }
+
+        .metric-bar { margin-bottom: 15px; }
+        .metric-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; font-weight: 600; }
+        .progress-bg { background: #e5e7eb; border-radius: 999px; height: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 999px; transition: width 1s ease-in-out; }
+
+        /* Accordion */
+        .accordion { margin-bottom: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+        .accordion-header {
+            background: var(--white);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .accordion-header:hover { background: var(--gray-100); }
+        .accordion-icon { transition: transform 0.3s; }
+        .accordion-header.active .accordion-icon { transform: rotate(180deg); }
+        .accordion-body { background: #f8fafc; padding: 0 20px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .accordion-body-content { padding: 15px 0; font-size: 14px; }
+
+        /* Status Badges */
+        .badge { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: bold; }
+        .badge-danger { background: var(--danger-light); color: var(--danger); }
+        .badge-warning { background: var(--warning-light); color: var(--warning); }
+        .badge-success { background: var(--success-light); color: var(--success); }
+
+        /* Tables */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .data-table th { text-align: left; padding: 12px; background: var(--gray-100); border-bottom: 2px solid #e5e7eb; color: #475569; }
+        .data-table td { padding: 12px; border-bottom: 1px solid #e5e7eb; }
+        .data-table tr:hover { background: var(--primary-light); }
+
+        /* Action Matrix */
+        .priority-matrix { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .priority-box { padding: 20px; border-radius: 8px; border-left: 5px solid; }
+        .p-critical { background: #fef2f2; border-color: var(--danger); }
+        .p-high { background: #fffbeb; border-color: var(--warning); }
+        .p-medium { background: #e0f2fe; border-color: #0ea5e9; }
+        .p-low { background: #ecfdf5; border-color: var(--success); }
+
+        /* Print Styles */
+        @media print {
+            body { background: white; }
+            .dashboard { padding: 0; }
+            .tabs { display: none; }
+            .tab-content { display: block !important; page-break-inside: avoid; margin-bottom: 20px; border: 1px solid #ddd; padding: 15px; }
+            .accordion-body { max-height: 100% !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-info">
+            <h1>SEO Audit Dashboard</h1>
+            <p>scope.paruluniversity.ac.in | Audited: May 2024</p>
+        </div>
+        <div class="header-badge">17 Critical Issues Found</div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'Overview')">Overview</button>
+        <button class="tab-btn" onclick="openTab(event, 'OnPage')">On-Page SEO</button>
+        <button class="tab-btn" onclick="openTab(event, 'Technical')">Technical & Speed</button>
+        <button class="tab-btn" onclick="openTab(event, 'OffPage')">Off-Page & Social</button>
+        <button class="tab-btn" onclick="openTab(event, 'ActionPlan')">Action Plan</button>
+    </div>
+
+    <!-- ================= OVERVIEW TAB ================= -->
+    <div id="Overview" class="tab-content active">
+        <div class="grid-4">
+            <!-- Main Score Donut -->
+            <div class="card" style="text-align: center;">
+                <div class="card-title">Overall SEO Score</div>
+                <div class="donut-chart-container">
+                    <svg viewBox="0 0 36 36" style="transform: rotate(-90deg);">
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" stroke-width="3"></path>
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="32, 100" stroke-linecap="round"></path>
+                    </svg>
+                    <div class="donut-text">
+                        <div class="donut-score">32</div>
+                        <div class="donut-label">out of 100</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-scores -->
+            <div class="card">
+                <div class="card-title">On-Page SEO</div>
+                <div style="font-size: 32px; font-weight: 800; color: var(--danger);">30%</div>
+                <span class="badge badge-danger">Poor</span>
+                <div class="metric-bar" style="margin-top:15px;">
+                    <div class="progress-bg"><div class="progress-fill" style="width: 30%; background: var(--danger);"></div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Technical SEO</div>
+                <div style="font-size: 32px; font-weight: 800; color: var(--warning);">40%</div>
+                <span class="badge badge-warning">Needs Work</span>
+                <div class="metric-bar" style="margin-top:15px;">
+                    <div class="progress-bg"><div class="progress-fill" style="width: 40%; background: var(--warning);"></div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Off-Page SEO</div>
+                <div style="font-size: 32px; font-weight: 800; color: var(--danger);">0%</div>
+                <span class="badge badge-danger">Non-Existent</span>
+                <div class="metric-bar" style="margin-top:15px;">
+                    <div class="progress-bg"><div class="progress-fill" style="width: 5%; background: var(--danger);"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3 style="margin-bottom: 15px;">🚨 Top Critical Issues</h3>
+                <ul style="list-style: none; font-size: 14px;">
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">🔴 Missing Meta Description & H1 Tag</li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">🔴 No Robots.txt or XML Sitemap</li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">🔴 Mobile Unfriendly (Score: 1/3)</li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">🔴 Severe Layout Shifts (CLS: 0.64)</li>
+                    <li style="padding: 8px 0;">🔴 0 Referring Domains to Subdomain</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom: 15px;">🟢 Positive Signals</h3>
+                <ul style="list-style: none; font-size: 14px;">
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">✅ Secure Connection (HTTPS) Active</li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">✅ Fast Server Response (TTFB: 0.002s)</li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">✅ Good Text-to-Code Ratio (31.9%)</li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">✅ No Broken Links Detected</li>
+                    <li style="padding: 8px 0;">✅ Directory Listing Disabled (Security)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ON-PAGE TAB ================= -->
+    <div id="OnPage" class="tab-content">
+        <div class="grid-2">
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Content & Meta Analysis</h3>
+                
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>🔴 SEO Title (Too Short: 24 chars)</span> <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="accordion-body-content">
+                            <strong>Current:</strong> "SCOPE | Parul University"<br>
+                            <strong>Issue:</strong> Fails to utilize keyword real estate.<br>
+                            <strong>Fix:</strong> Update to 50-60 characters, e.g., "SCOPE | Parul University - Top Computer Science & Engineering"
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>🔴 Meta Description (Missing)</span> <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="accordion-body-content">
+                            <strong>Issue:</strong> Search engines will auto-generate snippets, often poorly.<br>
+                            <strong>Fix:</strong> Add a compelling description (120-130 chars) highlighting courses, admissions, and campus life.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>🔴 Heading Hierarchy (Broken)</span> <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="accordion-body-content">
+                            <strong>Current:</strong> 1 H3, 6 H6s. Missing H1 and H2 entirely.<br>
+                            <strong>Fix:</strong> Add 1 H1 (Main topic). Use H2s for primary sections (e.g., "Our Programs", "Campus Life"). Use H3s for sub-sections.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>🔴 Image ALT Text (22 Missing)</span> <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="accordion-body-content">
+                            <strong>Issue:</strong> Logos, menus, and GIFs lack alt text, hurting accessibility and Google Image search.<br>
+                            <strong>Fix:</strong> Add descriptive alt text to all <img> tags. e.g., alt="SCOPE Parul University Logo".
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Keyword Density & Content Depth</h3>
+                <p style="font-size: 14px; margin-bottom: 15px; color: #64748b;">The page suffers from "Code Bloat Keywords"—CSS/HTML structural terms are outranking actual academic terms.</p>
+                
+                <div class="metric-bar">
+                    <div class="metric-header"><span>layer (2.21%)</span> <span class="badge badge-danger">Code</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width: 100%; background: #fca5a5;"></div></div>
+                </div>
+                <div class="metric-bar">
+                    <div class="metric-header"><span>post (1.74%)</span> <span class="badge badge-danger">Code</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width: 80%; background: #fca5a5;"></div></div>
+                </div>
+                <div class="metric-bar">
+                    <div class="metric-header"><span>scope (1.58%)</span> <span class="badge badge-warning">Brand</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width: 70%; background: #fcd34d;"></div></div>
+                </div>
+                <div class="metric-bar">
+                    <div class="metric-header"><span>knowledge (0.79%)</span> <span class="badge badge-success">Topic</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width: 35%; background: #6ee7b7;"></div></div>
+                </div>
+                <div class="metric-bar">
+                    <div class="metric-header"><span>science (0.79%)</span> <span class="badge badge-success">Topic</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width: 35%; background: #6ee7b7;"></div></div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: #e0f2fe; border-radius: 8px; font-size: 13px;">
+                    <strong>💡 Added Insight - Content Depth:</strong> At 670 words, the homepage is too shallow to rank for competitive academic terms. Add detailed sections about placement records, faculty qualifications, and specialized labs to reach 1500+ words.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TECHNICAL TAB ================= -->
+    <div id="Technical" class="tab-content">
+        <div class="grid-2">
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Core Web Vitals (Mobile)</h3>
+                
+                <div class="metric-bar">
+                    <div class="metric-header"><span>LCP (Largest Contentful Paint)</span> <span style="color:var(--success)">1.1s ✅</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width: 90%; background: var(--success);"></div></div>
+                </div>
+                
+                <div class="metric-bar">
+                    <div class="metric-header"><span>CLS (Cumulative Layout Shift)</span> <span style="color:var(--danger)">0.64 🔴</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width: 100%; background: var(--danger);"></div></div>
+                    <div style="font-size:12px; color:#64748b; margin-top:3px;">Fix: Set explicit width/height on images/GIFs. Avoid pushing content down.</div>
+                </div>
+                
+                <div class="metric-bar">
+                    <div class="metric-header"><span>INP (Interaction to Next Paint)</span> <span style="color:var(--danger)">1132ms 🔴</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width: 100%; background: var(--danger);"></div></div>
+                    <div style="font-size:12px; color:#64748b; margin-top:3px;">Fix: Defer non-critical JS. Reduce third-party script impact.</div>
+                </div>
+
+                <div class="metric-bar">
+                    <div class="metric-header"><span>Speed Index</span> <span style="color:var(--danger)">11.6s 🔴</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width: 80%; background: var(--danger);"></div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Crawlability & Indexation</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Check</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Robots.txt</td>
+                            <td><span class="badge badge-danger">Missing</span></td>
+                        </tr>
+                        <tr>
+                            <td>XML Sitemap</td>
+                            <td><span class="badge badge-danger">Missing</span></td>
+                        </tr>
+                        <tr>
+                            <td>Canonical Tag</td>
+                            <td><span class="badge badge-danger">Missing</span></td>
+                        </tr>
+                        <tr>
+                            <td>Schema Structured Data</td>
+                            <td><span class="badge badge-danger">Missing</span></td>
+                        </tr>
+                        <tr>
+                            <td>WWW Canonicalization</td>
+                            <td><span class="badge badge-danger">Failed</span></td>
+                        </tr>
+                        <tr>
+                            <td>HTTPS Security</td>
+                            <td><span class="badge badge-success">Active</span></td>
+                        </tr>
+                        <tr>
+                            <td>Noindex Meta</td>
+                            <td><span class="badge badge-success">Proper</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h3 style="margin-bottom: 10px;">💡 Added Insight - Accessibility (a11y) & Mobile UX</h3>
+            <p style="font-size: 14px; color: #64748b;">With a Mobile Friendliness score of 1/3, the site violates Google's Mobile-First Indexing best practices. Missing ALT text (22 instances) and tiny tap targets also violate WCAG accessibility guidelines, which can indirectly harm SEO via poor user engagement metrics (high bounce rate, low time-on-site).</p>
+        </div>
+    </div>
+
+    <!-- ================= OFF-PAGE TAB ================= -->
+    <div id="OffPage" class="tab-content">
+        <div class="grid-2">
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Link Equity & Authority</h3>
+                <div style="text-align: center; padding: 20px; background: var(--danger-light); border-radius: 8px; margin-bottom: 15px;">
+                    <h2 style="color: var(--danger); font-size: 40px; margin-bottom: 5px;">0</h2>
+                    <p style="font-weight: bold; color: var(--danger);">Referring Domains to Subdomain</p>
+                </div>
+                <p style="font-size: 14px; margin-bottom: 15px;">While the <em>root</em> domain (paruluniversity.ac.in) has strong authority (2.1K backlinks), the <strong>scope.</strong> subdomain is treated as a separate website by Google, inheriting <strong>zero</strong> direct link equity.</p>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Top Root Domain Backlinks</th>
+                            <th>AS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Jagranjosh.com</td><td>86</td></tr>
+                        <tr><td>teknokrat.ac.id</td><td>72</td></tr>
+                        <tr><td>wikipedia.org</td><td>63</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Social Media Connectivity</h3>
+                <div style="display: grid; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                        <span style="font-size: 24px;">▶️</span> <strong>YouTube:</strong> <span class="badge badge-success">Connected</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                        <span style="font-size: 24px;">📸</span> <strong>Instagram:</strong> <span class="badge badge-success">Connected</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                        <span style="font-size: 24px;">💼</span> <strong>LinkedIn:</strong> <span class="badge badge-success">Connected</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                        <span style="font-size: 24px;">📘</span> <strong>Facebook:</strong> <span class="badge badge-danger">Missing</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: #f8fafc; border-radius: 8px;">
+                        <span style="font-size: 24px;">🐦</span> <strong>X (Twitter):</strong> <span class="badge badge-danger">Missing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ACTION PLAN TAB ================= -->
+    <div id="ActionPlan" class="tab-content">
+        <div class="card">
+            <h3 style="margin-bottom: 25px;">Priority Matrix & Implementation Guide</h3>
+            <div class="priority-matrix">
+                <div class="priority-box p-critical">
+                    <h4 style="color: var(--danger); margin-bottom: 10px;">🔴 Urgent & Critical (Do Now)</h4>
+                    <ul style="font-size: 14px; padding-left: 20px; line-height: 1.8;">
+                        <li>Add H1 Tag & Meta Description.</li>
+                        <li>Create and upload Robots.txt & Sitemap.xml.</li>
+                        <li>Fix Broken Heading Hierarchy (Add H2s).</li>
+                        <li>Add ALT text to all 22 images.</li>
+                    </ul>
+                </div>
+
+                <div class="priority-box p-high">
+                    <h4 style="color: var(--warning); margin-bottom: 10px;">🟡 High Impact (Week 2-4)</h4>
+                    <ul style="font-size: 14px; padding-left: 20px; line-height: 1.8;">
+                        <li>Fix CLS by setting image dimensions.</li>
+                        <li>Fix INP by deferring JavaScript.</li>
+                        <li>Implement Mobile Responsive CSS.</li>
+                        <li>Implement 301 redirects (www vs non-www).</li>
+                    </ul>
+                </div>
+
+                <div class="priority-box p-medium">
+                    <h4 style="color: #0ea5e9; margin-bottom: 10px;">🔵 Strategic Growth (Month 2-3)</h4>
+                    <ul style="font-size: 14px; padding-left: 20px; line-height: 1.8;">
+                        <li>Add Educational Schema.org markup.</li>
+                        <li>Create dedicated backlinks to the SCOPE subdomain.</li>
+                        <li>Add missing Facebook & X links.</li>
+                        <li>Expand word count to 1500+ words with LSI keywords.</li>
+                    </ul>
+                </div>
+
+                <div class="priority-box p-low">
+                    <h4 style="color: var(--success); margin-bottom: 10px;">🟢 Long Term Maintenance</h4>
+                    <ul style="font-size: 14px; padding-left: 20px; line-height: 1.8;">
+                        <li>Regular content updates (signal freshness).</li>
+                        <li>Minify CSS and JS files.</li>
+                        <li>Set up Google Business Profile for Local SEO.</li>
+                        <li>Consider migrating to subdirectory for link equity.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function openTab(evt, tabName) {
+        var i, tabcontent, tabbtns;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tabbtns = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tabbtns.length; i++) {
+            tabbtns[i].className = tabbtns[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
+    function toggleAccordion(element) {
+        element.classList.toggle("active");
+        var body = element.nextElementSibling;
+        if (body.style.maxHeight) {
+            body.style.maxHeight = null;
+        } else {
+            body.style.maxHeight = body.scrollHeight + "px";
+        }
+    }
+</script>
+
+</body>
+</html>
